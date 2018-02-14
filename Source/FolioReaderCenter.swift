@@ -1452,8 +1452,8 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
 extension String {
     init(contentsOfFile: String, encoding: String.Encoding, config: FolioReaderConfig) {
         
-        guard let string = try? String(contentsOfFile: contentOfFile, encoding: encoding) else {
-            self = config.decryptClosure!(contentOfFile)
+        guard let string = try? String(contentsOfFile: contentsOfFile, encoding: encoding) else {
+            self = config.decryptClosure!(contentsOfFile)
             return
         }
         self = string
