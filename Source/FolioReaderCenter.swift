@@ -461,7 +461,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
         // Configure the cell
         let resource = self.book.spine.spineReferences[indexPath.row].resource
-        guard var html = try? String(contentsOfFile: resource.fullHref, encoding: String.Encoding.utf8) else {
+        guard var html = try? String(contentsOfFile: resource.fullHref, encoding: String.Encoding.utf8, config: self.readerConfig) else {
             return cell
         }
 
@@ -1456,3 +1456,15 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
     }
     
 }
+//IID START
+extension String {
+    init(contentsOfFile: String, encoding: String.Encoding, config: FolioReaderConfig) {
+        
+        guard let string = try? String(contentsOfFile: contentOfFile, encoding: encoding) else {
+            self = config.decryptClosure!(contentOfFile)
+            return
+        }
+        self = string
+    }
+}
+//IID END

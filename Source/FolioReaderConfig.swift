@@ -208,6 +208,10 @@ open class FolioReaderConfig: NSObject {
     open var localizedShareImageQuote = NSLocalizedString("Share image quote", comment: "")
     open var localizedShareTextQuote = NSLocalizedString("Share text quote", comment: "")
 
+    //IID START
+    open var decryptClosure: ((String) -> String)?
+    //IID END
+    
     public convenience init(withIdentifier identifier: String) {
         self.init()
 
