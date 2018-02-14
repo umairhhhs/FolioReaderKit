@@ -45,7 +45,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     ///
     /// - Parameters:
     ///   - epubPath: Epub path on the disk.
-    ///   - unzipPath: Path to unzip the compressed pub.
+    ///   - unzipPath: Path to unzip the compressed epub.
     /// - Returns: The book title
     /// - Throws: `FolioReaderError`
     func parseTitle(_ epubPath: String, unzipPath: String? = nil) throws -> String {
@@ -60,7 +60,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     ///
     /// - Parameters:
     ///   - epubPath: Epub path on the disk.
-    ///   - unzipPath: Path to unzip the compressed pub.
+    ///   - unzipPath: Path to unzip the compressed epub.
     /// - Returns: The author name
     /// - Throws: `FolioReaderError`
     func parseAuthorName(_ epubPath: String, unzipPath: String? = nil) throws -> String {
@@ -75,7 +75,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     /// - Parameters:
     ///   - withEpubPath: Epub path on the disk
     ///   - removeEpub: Should remove the original file?
-    ///   - unzipPath: The path to unzip
+    ///   - unzipPath: Path to unzip the compressed epub.
     /// - Returns: `FRBook` Object
     /// - Throws: `FolioReaderError`
     func readEpub(epubPath withEpubPath: String, removeEpub: Bool = true, unzipPath: String? = nil) throws -> FRBook {
@@ -319,7 +319,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
             }
 
             guard let reference = navpointElement["content"].attributes["src"] else { return nil }
-            let hrefSplit = reference.characters.split {$0 == "#"}.map { String($0) }
+            let hrefSplit = reference.split {$0 == "#"}.map { String($0) }
             let fragmentID = hrefSplit.count > 1 ? hrefSplit[1] : ""
             let href = hrefSplit[0]
 
@@ -340,7 +340,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
             }
 
             guard let reference = navpointElement["a"].attributes["href"] else { return nil }
-            let hrefSplit = reference.characters.split {$0 == "#"}.map { String($0) }
+            let hrefSplit = reference.split {$0 == "#"}.map { String($0) }
             let fragmentID = hrefSplit.count > 1 ? hrefSplit[1] : ""
             let href = hrefSplit[0]
 

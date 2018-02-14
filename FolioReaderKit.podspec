@@ -13,8 +13,9 @@ Pod::Spec.new do |s|
   s.source           = { :git => "https://github.com/FolioReader/FolioReaderKit.git", :tag => s.version.to_s }
   s.social_media_url = 'https://twitter.com/hebertialmeida'
 
-  s.platform     = :ios, '8.0'
-  s.requires_arc = true
+  s.swift_version = '4.0'
+  s.platform      = :ios, '8.0'
+  s.requires_arc  = true
 
   s.source_files = [
     'Source/*.{h,swift}',
@@ -35,6 +36,6 @@ Pod::Spec.new do |s|
   s.dependency 'AEXML', '4.2.2'
   s.dependency 'FontBlaster', '4.0.1'
   s.dependency 'JSQWebViewController', '6.0.0'
-  s.dependency 'RealmSwift', '3.0.2'
+  s.dependency 'RealmSwift', '3.1.1'
 
 end
