@@ -103,6 +103,16 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         tapGestureRecognizer.numberOfTapsRequired = 1
         tapGestureRecognizer.delegate = self
         webView?.addGestureRecognizer(tapGestureRecognizer)
+        
+        //IID listen to UIMenue hide notification
+        NotificationCenter.default.addObserver(self, selector: #selector(menuDidHide), name: .UIMenuControllerDidHideMenu, object: nil)
+
+    }
+    
+    // IID
+    @objc func menuDidHide() {
+        self.menuIsVisible = false
+        self.shouldShowBar = true
     }
 
     required public init?(coder aDecoder: NSCoder) {
