@@ -1451,12 +1451,17 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
 //IID START
 extension String {
     init(contentsOfFile: String, encoding: String.Encoding, config: FolioReaderConfig) {
-        
-        guard let string = try? String(contentsOfFile: contentsOfFile, encoding: encoding) else {
-            self = config.decryptClosure!(contentsOfFile)
+       
+        if let fileDelegate = config.fileDelegate {
+            self = config.fileDelegate!(contentsOfFile)
             return
         }
-        self = string
+
+//        guard let string = try? String(contentsOfFile: contentsOfFile, encoding: encoding) else {
+//            self = config.decryptClosure!(contentsOfFile)
+//            return
+//        }
+        self = try! String(contentsOfFile: contentsOfFile, encoding: encoding)
     }
 }
 //IID END

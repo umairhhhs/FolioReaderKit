@@ -209,7 +209,7 @@ open class FolioReaderConfig: NSObject {
     open var localizedShareTextQuote = NSLocalizedString("Share text quote", comment: "")
 
     //IID START
-    open var decryptClosure: ((String) -> String)?
+    open var fileDelegate: ((String) -> String)?
     //IID END
     
     public convenience init(withIdentifier identifier: String) {
