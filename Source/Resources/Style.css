@@ -290,3 +290,10 @@ p, span, div {
         hyphens: none !important;
     }
 }
+
+/* IID */
+
+p.tabellentext
+{
+    margin: 0 !important;
+}
