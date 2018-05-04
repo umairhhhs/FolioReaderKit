@@ -82,7 +82,7 @@ img { -webkit-user-select: none; }
 p {
     margin: 1.3em 0 1.5em 0;
     line-height: 1.40em !important;
-    text-indent: 1.25em;
+    text-indent: 0em;
 }
 
 b, strong, th {font-weight: bolder !important;}
