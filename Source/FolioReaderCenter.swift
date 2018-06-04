@@ -1170,7 +1170,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
     open func scrollViewDidScroll(_ scrollView: UIScrollView) {
 
-        if (navigationController?.isNavigationBarHidden == false) {
+        if (navigationController?.isNavigationBarHidden == false && scrollView.isDragging) {
             self.toggleBars()
         }
 
