@@ -267,13 +267,19 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
         do {
             if tocResource.mediaType == MediaType.ncx {
                 let ncxData = try Data(contentsOf: URL(fileURLWithPath: tocPath), options: .alwaysMapped)
-                let xmlDoc = try AEXMLDocument(xml: ncxData)
+                //IID RE-363
+                var options = AEXMLOptions()
+                options.parserSettings.shouldTrimWhitespace = false
+                let xmlDoc = try AEXMLDocument(xml: ncxData, options: options)
                 if let itemsList = xmlDoc.root["navMap"]["navPoint"].all {
                     tocItems = itemsList
                 }
             } else {
                 let tocData = try Data(contentsOf: URL(fileURLWithPath: tocPath), options: .alwaysMapped)
-                let xmlDoc = try AEXMLDocument(xml: tocData)
+                //IID RE-363
+                var options = AEXMLOptions()
+                options.parserSettings.shouldTrimWhitespace = false
+                let xmlDoc = try AEXMLDocument(xml: tocData, options: options)
 
                 if let nav = xmlDoc.root["body"]["nav"].first, let itemsList = nav["ol"]["li"].all {
                     tocItems = itemsList
