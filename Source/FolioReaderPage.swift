@@ -287,7 +287,18 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
 
                 let href = splitedPath[1].trimmingCharacters(in: CharacterSet(charactersIn: "/"))
                 let hrefPage = (self.folioReader.readerCenter?.findPageByHref(href) ?? 0) + 1
-
+                
+                // IID handle click on non linear item like a image. Show a zoomable single page
+                // check if FRResource in FRSpine in non linear
+                let spine = self.book.spine.spineReferences.filter { (aSpine) -> Bool in
+                    return aSpine.resource.href == href && aSpine.linear != true
+                }
+                if let aSpine = spine.first {
+                    openModal(resource: aSpine.resource)
+                    return false
+                }
+                // END IID
+                
                 if (hrefPage == pageNumber) {
                     // Handle internal #anchor
                     if anchorFromURL != nil {
@@ -558,4 +569,12 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     open func performJavaScript(_ javaScriptCode: String) -> String? {
         return webView?.js(javaScriptCode)
     }
+    
+    //IID
+    func openModal(resource: FRResource ) {
+        //
+        let dict: Dictionary =  ["fullHref" : resource.fullHref!]
+        NotificationCenter.default.post(name: Notification.Name("ShowNonInlineContent"), object: nil, userInfo: dict)
+    }
+    //END IID
 }
