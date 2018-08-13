@@ -6,9 +6,84 @@
 //  Copyright (c) 2015 Folio Reader. All rights reserved.
 //
 
-var thisHighlight;
+var newHighlights;
 var audioMarkClass;
 var wordsPerMinute = 180;
+var highlighter;
+
+
+ window.onload = function() {
+ //Normal code goes here
+    rangy.init();
+    highlighter = rangy.createHighlighter();
+    highlighter.addClassApplier(rangy.createClassApplier("highlight-yellow", {
+                                                      ignoreWhiteSpace: true,
+                                                      tagNames: ["span", "a"],
+                                                      elementProperties: {
+                                                         href: "#",
+                                                         onclick: function() {
+                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                            callHighlightURL(this)
+                                                         return false;
+                                                         }
+                                                      }
+                                                      }));
+ 
+    highlighter.addClassApplier(rangy.createClassApplier("highlight-green", {
+                                                      ignoreWhiteSpace: true,
+                                                      tagNames: ["span", "a"],
+                                                         elementProperties: {
+                                                         href: "#",
+                                                         onclick: function() {
+                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                         callHighlightURL(this)
+                                                         return false;
+                                                         }
+                                                         }
+                                                      }));
+ 
+    highlighter.addClassApplier(rangy.createClassApplier("highlight-blue", {
+                                                      ignoreWhiteSpace: true,
+                                                         tagNames: ["span", "a"],
+                                                         elementProperties: {
+                                                         href: "#",
+                                                         onclick: function() {
+                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                         callHighlightURL(this)
+                                                         return false;
+                                                         }
+                                                         }
+                                                         }));
+ 
+    highlighter.addClassApplier(rangy.createClassApplier("highlight-pink", {
+                                                      ignoreWhiteSpace: true,
+                                                         tagNames: ["span", "a"],
+                                                         elementProperties: {
+                                                         href: "#",
+                                                         onclick: function() {
+                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                         callHighlightURL(this)
+                                                         return false;
+                                                         }
+                                                         }
+                                                         }));
+ 
+    highlighter.addClassApplier(rangy.createClassApplier("highlight-underline", {
+                                                      ignoreWhiteSpace: true,
+                                                         tagNames: ["span", "a"],
+                                                         elementProperties: {
+                                                         href: "#",
+                                                         onclick: function() {
+                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                         callHighlightURL(this)
+                                                         return false;
+                                                         }
+                                                         }
+                                                         }));
+
+ };
+
+
 
 document.addEventListener("DOMContentLoaded", function(event) {
 //    var lnk = document.getElementsByClassName("lnk");
@@ -20,10 +95,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
 // Generate a GUID
 function guid() {
     function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+        return Math.floor((1 + Math.random()) * 0x10000)
     }
-    var guid = s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-    return guid.toUpperCase();
+    var guid = s4() + s4() + s4() + s4();
+    return "" + guid
 }
 
 // Get All HTML
@@ -82,24 +157,20 @@ function setFontSize(cls) {
  *	Native bridge Highlight text
  */
 function highlightString(style) {
+    
+    var highlightSelection = highlighter.highlightSelection(style);
+    newHighlights = highlightSelection;
+    var aNewHighlight = newHighlights[0];
+    
     var range = window.getSelection().getRangeAt(0);
     var startOffset = range.startOffset;
     var endOffset = range.endOffset;
-    var selectionContents = range.extractContents();
-    var elm = document.createElement("highlight");
     var id = guid();
-    
-    elm.appendChild(selectionContents);
-    elm.setAttribute("id", id);
-    elm.setAttribute("onclick","callHighlightURL(this);");
-    elm.setAttribute("class", style);
-    
-    range.insertNode(elm);
-    thisHighlight = elm;
-    
+    aNewHighlight.id = id
+    var text = window.getSelection().toString();
     var params = [];
-    params.push({id: id, rect: getRectForSelectedText(elm), startOffset: startOffset.toString(), endOffset: endOffset.toString()});
-    
+    params.push({id: id , rect: getRectForSelectedText(range) , startOffset: startOffset.toString(), endOffset: endOffset.toString(), content: text, rangy: highlighter.serialize() ,color: style});
+    clearSelection();
     return JSON.stringify(params);
 }
 
@@ -125,25 +196,57 @@ function highlightStringWithNote(style) {
     return JSON.stringify(params);
 }
 
-function getHighlightId() {
-    return thisHighlight.id;
+// IID added
+
+function setHighlight( serializedHighlight ) {
+    highlighter.deserialize(serializedHighlight);
+}
+
+function getHighlights() {
+    try {
+        return highlighter.serialize();
+    } catch(err){}
+}
+
+function currentHighlightId() {
+    try {
+        return newHighlights[0].id;
+    } catch(err){}
+}
+
+function clearSelection() {
+    if (window.getSelection) {
+        if (window.getSelection().empty) {  // Chrome
+            window.getSelection().empty();
+        } else if (window.getSelection().removeAllRanges) {  // Firefox
+            window.getSelection().removeAllRanges();
+        }
+    } else if (document.selection) {  // IE?
+        document.selection.empty();
+    }
 }
 
 // Menu colors
 function setHighlightStyle(style) {
-    thisHighlight.className = style;
-    return thisHighlight.id;
+    // get range of highligt
+    var currentId = newHighlights[0].id
+    newHighlights = highlighter.highlightCharacterRanges(style,[newHighlights[0].characterRange])
+    newHighlights[0].id = currentId
+    return currentId;
 }
 
 function removeThisHighlight() {
-    thisHighlight.outerHTML = thisHighlight.innerHTML;
-    return thisHighlight.id;
+    var id = newHighlights[0].id;
+    highlighter.removeHighlights( newHighlights );
+    newHighlights = null;
+    return id ;
 }
 
-function removeHighlightById(elmId) {
-    var elm = document.getElementById(elmId);
-    elm.outerHTML = elm.innerHTML;
-    return elm.id;
+function removeHighlightById(hightlightId) {
+    var highlight = getHighlightById(hightlightId);
+    var id = highlight.id;
+    highlighter.removeHighlights( [highlight] );
+    return id;
 }
 
 function getHighlightContent() {
@@ -174,7 +277,7 @@ var callHighlightURL = function(elm) {
 	event.stopPropagation();
 	var URLBase = "highlight://";
     var currentHighlightRect = getRectForSelectedText(elm);
-    thisHighlight = elm;
+   // thisHighlight = elm;
     
     window.location = URLBase + encodeURIComponent(currentHighlightRect);
 }
@@ -200,6 +303,33 @@ function getReadingTime() {
 
     return readingTimeMinutes;
 }
+// IID
+var  getHighlightOffset = function(highlightId, horizontal) {
+    var elem = getHighlightElementById(highlightId)
+    if (horizontal) {
+        return document.body.clientWidth * Math.floor(elem.offsetTop / window.innerHeight);
+    }
+    return elem.offsetTop;
+}
+var getHighlightById = function (hightlightId) {
+    var highlights = [];
+    for ( var i in highlighter.highlights ) {
+        var highlight = highlighter.highlights[i];
+        if (parseInt(highlightId) === parseInt(highlight.id)) {
+            highlights = highlight;
+        }
+    }
+    return highlights[0];
+}
+var getHighlightElementById = function (highlightId) {
+   
+    var highlight = getHighlightById(highlightId)
+    var elements = highlight.getHighlightElements();
+    elem = elements[0];
+    return elem
+}
+
+// IID END
 
 /**
  Get Vertical or Horizontal paged #anchor offset
