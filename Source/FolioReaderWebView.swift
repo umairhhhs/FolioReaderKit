@@ -130,71 +130,72 @@ open class FolioReaderWebView: UIWebView {
         setMenuVisible(false)
     }
 
-    @objc func highlight(_ sender: UIMenuController?) {
+    @objc func addHighlight(_ sender: UIMenuController?) -> Highlight? {
         let highlightAndReturn = js("highlightString('\(HighlightStyle.classForStyle(self.folioReader.currentHighlightStyle))')")
-        let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8)
-
-        do {
-            let json = try JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSArray
-            let dic = json.firstObject as! [String: String]
-            let rect = CGRectFromString(dic["rect"]!)
-            guard let startOffset = dic["startOffset"] else {
-                return
-            }
-            guard let endOffset = dic["endOffset"] else {
-                return
-            }
-
-            createMenu(options: true)
-            setMenuVisible(true, andRect: rect)
-
-            // Persist
-            guard
-                let html = js("getHTML()"),
-                let identifier = dic["id"],
-                let bookId = (self.book.name as NSString?)?.deletingPathExtension else {
-                    return
-            }
-
-            let pageNumber = folioReader.readerCenter?.currentPageNumber ?? 0
-            let match = Highlight.MatchingHighlight(text: html, id: identifier, startOffset: startOffset, endOffset: endOffset, bookId: bookId, currentPage: pageNumber)
-            let highlight = Highlight.matchHighlight(match)
-            highlight?.persist(withConfiguration: self.readerConfig)
-
-        } catch {
-            print("Could not receive JSON")
-        }
-    }
-    
-    @objc func highlightWithNote(_ sender: UIMenuController?) {
-        let highlightAndReturn = js("highlightStringWithNote('\(HighlightStyle.classForStyle(self.folioReader.currentHighlightStyle))')")
         let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8)
         
         do {
             let json = try JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSArray
             let dic = json.firstObject as! [String: String]
             let rect = CGRectFromString(dic["rect"]!)
-            guard let startOffset = dic["startOffset"] else { return }
-            guard let endOffset = dic["endOffset"] else { return }
             
-            self.clearTextSelection()
+            guard let rangies = dic["rangy"] else {
+                return nil
+            }
             
-            guard let html = js("getHTML()") else { return }
-            guard let identifier = dic["id"] else { return }
-            guard let bookId = (self.book.name as NSString?)?.deletingPathExtension else { return }
+            guard let text = dic["content"] else {
+                return nil
+            }
+            
+            createMenu(options: true)
+            setMenuVisible(true, andRect: rect)
+            
+            // Persist
+            guard
+                let identifier = dic["id"],
+                let bookId = (self.book.name as NSString?)?.deletingPathExtension else {
+                    return nil
+            }
+            // MARK: Move to method
+            // get matching rang
+            let rangeString = getRangy(rangies, with: identifier)
             
             let pageNumber = folioReader.readerCenter?.currentPageNumber ?? 0
-            let match = Highlight.MatchingHighlight(text: html, id: identifier, startOffset: startOffset, endOffset: endOffset, bookId: bookId, currentPage: pageNumber)
-            if let highlight = Highlight.matchHighlight(match) {
-                self.folioReader.readerCenter?.presentAddHighlightNote(highlight, edit: false)
-            }
+            let match = Highlight.MatchingHighlight(text: text, id: identifier, bookId: bookId, currentPage: pageNumber, rangy:  rangeString)
+            let highlight = Highlight.matchHighlight(match)
+            return highlight
+            
         } catch {
             print("Could not receive JSON")
+        }
+        return nil
+
+    }
+
+    @objc func highlight(_ sender: UIMenuController?) {
+        let highlight = addHighlight(sender)
+        highlight?.persist(withConfiguration: self.readerConfig)
+
+    }
+    
+    func getRangy(_ rangies: String, with identifier: String) -> String {
+        var rangylist = rangies.split(separator: "|")
+        rangylist.remove(at: 0)
+        var range = rangylist.filter { (aRangy) -> Bool in
+            aRangy.split(separator: "$")[2] == identifier
+            }.first
+        let rangeString = String("type:textContent|\(range!)")
+        return rangeString
+    }
+    
+    @objc func highlightWithNote(_ sender: UIMenuController?) {
+        if let highlight = addHighlight(sender) {
+           self.folioReader.readerCenter?.presentAddHighlightNote(highlight, edit: false)
         }
     }
     
     @objc func updateHighlightNote (_ sender: UIMenuController?) {
-        if let highlightId = js("getHighlightId()") {
+        if let highlightId = js("currentHighlightId()") {
             let highlightNote = Highlight.getById(withConfiguration: readerConfig, highlightId: highlightId)
             self.folioReader.readerCenter?.presentAddHighlightNote(highlightNote, edit: true)
         }
@@ -244,7 +245,10 @@ open class FolioReaderWebView: UIWebView {
         self.folioReader.currentHighlightStyle = style.rawValue
 
         if let updateId = js("setHighlightStyle('\(HighlightStyle.classForStyle(style.rawValue))')") {
-            Highlight.updateById(withConfiguration: self.readerConfig, highlightId: updateId, type: style)
+            if let rangies = js("getHighlights()") {
+                let rangeString = getRangy(rangies, with: updateId)
+                Highlight.updateById(withConfiguration: self.readerConfig, highlightId: updateId, rangy: rangeString)
+            }
         }
         
         //FIX: https://github.com/FolioReader/FolioReaderKit/issues/316

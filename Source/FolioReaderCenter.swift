@@ -467,14 +467,21 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
         let mediaOverlayStyleColors = "\"\(self.readerConfig.mediaOverlayColor.hexString(false))\", \"\(self.readerConfig.mediaOverlayColor.highlightColor().hexString(false))\""
 
-        // Inject CSS
-        let jsFilePath = Bundle.frameworkBundle().path(forResource: "Bridge", ofType: "js")
+        // Inject CSS and js
+        let jsFiles = ["rangy-core", "rangy-classapplier", "rangy-highlighter", "rangy-serializer",  "Bridge" ]
+        
+        var jsFilesTags: String = ""
+        for jsFile in jsFiles {
+            let jsFilePath = Bundle.frameworkBundle().path(forResource: jsFile, ofType: "js")
+            let jsTag = "<script type=\"text/javascript\" src=\"\(jsFilePath!)\"></script>"
+            jsFilesTags.append( jsTag )
+        }
+        jsFilesTags.append( "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>" )
+
         let cssFilePath = Bundle.frameworkBundle().path(forResource: "Style", ofType: "css")
         let cssTag = "<link rel=\"stylesheet\" type=\"text/css\" href=\"\(cssFilePath!)\">"
-        let jsTag = "<script type=\"text/javascript\" src=\"\(jsFilePath!)\"></script>" +
-        "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>"
 
-        let toInject = "\n\(cssTag)\n\(jsTag)\n</head>"
+        let toInject = "\n\(cssTag)\n\(jsFilesTags)\n</head>"
         html = html.replacingOccurrences(of: "</head>", with: toInject)
 
         // Font class name
@@ -724,7 +731,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     open func changePageWith(page: Int, andFragment fragment: String, animated: Bool = false, completion: (() -> Void)? = nil) {
         if (self.currentPageNumber == page) {
             if let currentPage = currentPage , fragment != "" {
-                currentPage.handleAnchor(fragment, avoidBeginningAnchors: true, animated: animated)
+                currentPage.scrollTo(fragment)
             }
             completion?()
         } else {

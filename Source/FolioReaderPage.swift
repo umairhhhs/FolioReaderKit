@@ -167,34 +167,6 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         guard let bookId = (self.book.name as NSString?)?.deletingPathExtension else {
             return tempHtmlContent as String
         }
-
-        let highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId, andPage: pageNumber as NSNumber?)
-
-        if (highlights.count > 0) {
-            for item in highlights {
-                let style = HighlightStyle.classForStyle(item.type)
-                
-                var tag = ""
-                if let _ = item.noteForHighlight {
-                    tag = "<highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightWithNoteURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
-                } else {
-                    tag = "<highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
-                }
-                
-                var locator = item.contentPre + item.content
-                locator += item.contentPost
-                locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
-                
-                let range: NSRange = tempHtmlContent.range(of: locator, options: .literal)
-                
-                if range.location != NSNotFound {
-                    let newRange = NSRange(location: range.location + item.contentPre.count, length: item.content.count)
-                    tempHtmlContent = tempHtmlContent.replacingCharacters(in: newRange, with: tag) as NSString
-                } else {
-                    print("highlight range not found")
-                }
-            }
-        }
         return tempHtmlContent as String
     }
 
@@ -232,8 +204,21 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             webView.isColors = false
             self.webView?.createMenu(options: false)
         })
-
         delegate?.pageDidLoad?(self)
+
+        // IID
+        // add highlight
+        guard let bookId = (self.book.name as NSString?)?.deletingPathExtension else {
+            return
+        }
+        let highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId, andPage: pageNumber as NSNumber?)
+        var rangies = highlights.reduce("type:textContent") { (string, highlight) -> String in
+            let range = highlight.rangy!.split(separator: "|").last
+            return string + String("|\(range!)")
+        }
+        if (rangies.count > 0) {
+            self.webView?.js("setHighlight('\(rangies)')")
+        }
     }
 
     open func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
@@ -245,7 +230,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
 
         guard let url = request.url else { return false }
 
-        if scheme == "highlight" || scheme == "highlight-with-note" {
+        if scheme == "highlight" {
             shouldShowBar = false
 
             guard let decoded = url.absoluteString.removingPercentEncoding else { return false }
@@ -453,7 +438,27 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             }
         }
     }
+    // IID
+   
+    open func scrollTo(_ highlightId: String ) {
+        if !highlightId.isEmpty {
+            let offset = getHighlightOffset(highlightId)
+            scrollPageToOffset(offset, animated: false)
+        }
+    }
+    
+    func getHighlightOffset(_ highlightId: String) -> CGFloat {
+        let horizontal = self.readerConfig.scrollDirection == .horizontal
+        if let strOffset = webView?.js("getHighlightOffset('\(highlightId)', \(horizontal.description))") {
+            return CGFloat((strOffset as NSString).floatValue)
+        }
+        
+        return CGFloat(0)
+    }
 
+    
+    // IID END
+    
     /**
      Handdle #anchors in html, get the offset and scroll to it
 
