@@ -159,7 +159,7 @@ extension Highlight {
     ///   - readerConfig: Current folio reader configuration.
     ///   - highlightId: The ID to be removed
     ///   - type: The `HighlightStyle`
-    public static func updateById(withConfiguration readerConfig: FolioReaderConfig, highlightId: String, type: HighlightStyle) {
+    public static func updateById(withConfiguration readerConfig: FolioReaderConfig, highlightId: String, rangy: String) {
         var highlight: Highlight?
         let predicate = NSPredicate(format:"highlightId = %@", highlightId)
         do {
@@ -167,7 +167,7 @@ extension Highlight {
             highlight = realm.objects(Highlight.self).filter(predicate).toArray(Highlight.self).first
             realm.beginWrite()
 
-            highlight?.type = type.hashValue
+            highlight?.rangy = rangy
 
             try realm.commitWrite()
             
@@ -225,60 +225,28 @@ extension Highlight {
     public struct MatchingHighlight {
         var text: String
         var id: String
-        var startOffset: String
-        var endOffset: String
         var bookId: String
         var currentPage: Int
+        var rangy: String
+
     }
 
     /**
      Match a highlight on string.
      */
     public static func matchHighlight(_ matchingHighlight: MatchingHighlight) -> Highlight? {
-        let pattern = "<highlight id=\"\(matchingHighlight.id)\" onclick=\".*?\" class=\"(.*?)\">((.|\\s)*?)</highlight>"
-        let regex = try? NSRegularExpression(pattern: pattern, options: [])
-        let matches = regex?.matches(in: matchingHighlight.text, options: [], range: NSRange(location: 0, length: matchingHighlight.text.utf16.count))
-        let str = (matchingHighlight.text as NSString)
-
-        let mapped = matches?.map { (match) -> Highlight in
-            var contentPre = str.substring(with: NSRange(location: match.range.location-kHighlightRange, length: kHighlightRange))
-            var contentPost = str.substring(with: NSRange(location: match.range.location + match.range.length, length: kHighlightRange))
-
-            // Normalize string before save
-            contentPre = Highlight.subString(ofContent: contentPre, fromRangeOfString: ">", withPattern: "((?=[^>]*$)(.|\\s)*$)")
-            contentPost = Highlight.subString(ofContent: contentPost, fromRangeOfString: "<", withPattern: "^((.|\\s)*?)(?=<)")
-
-            let highlight = Highlight()
-            highlight.highlightId = matchingHighlight.id
-            highlight.type = HighlightStyle.styleForClass(str.substring(with: match.range(at: 1))).rawValue
-            highlight.date = Date()
-            highlight.content = Highlight.removeSentenceSpam(str.substring(with: match.range(at: 2)))
-            highlight.contentPre = Highlight.removeSentenceSpam(contentPre)
-            highlight.contentPost = Highlight.removeSentenceSpam(contentPost)
-            highlight.page = matchingHighlight.currentPage
-            highlight.bookId = matchingHighlight.bookId
-            highlight.startOffset = (Int(matchingHighlight.startOffset) ?? -1)
-            highlight.endOffset = (Int(matchingHighlight.endOffset) ?? -1)
-
-            return highlight
-        }
-
-        return mapped?.first
+        
+        let highlight = Highlight()
+        highlight.highlightId = matchingHighlight.id
+        highlight.date = Date()
+        highlight.content = matchingHighlight.text
+        highlight.page = matchingHighlight.currentPage
+        highlight.bookId = matchingHighlight.bookId
+        highlight.rangy = matchingHighlight.rangy
+        return highlight
+        
     }
 
-    private static func subString(ofContent content: String, fromRangeOfString rangeString: String, withPattern pattern: String) -> String {
-        var updatedContent = content
-        if updatedContent.range(of: rangeString) != nil {
-            let regex = try? NSRegularExpression(pattern: pattern, options: [])
-            let searchString = regex?.firstMatch(in: updatedContent, options: .reportProgress, range: NSRange(location: 0, length: updatedContent.count))
-
-            if let string = searchString, (string.range.location != NSNotFound) {
-                updatedContent = (updatedContent as NSString).substring(with: string.range)
-            }
-        }
-
-        return updatedContent
-    }
 
     /// Remove a Highlight from HTML by ID
     ///
@@ -295,38 +263,5 @@ extension Highlight {
             print("Error removing Highlight from page")
             return nil
         }
-    }
-    
-    /**
-     Remove span tag before store the highlight, this span is added on JavaScript.
-     <span class=\"sentence\"></span>
-     
-     - parameter text: Text to analise
-     - returns: Striped text
-     */
-    public static func removeSentenceSpam(_ text: String) -> String {
-        
-        // Remove from text
-        func removeFrom(_ text: String, withPattern pattern: String) -> String {
-            var locator = text
-            let regex = try? NSRegularExpression(pattern: pattern, options: [])
-            let matches = regex?.matches(in: locator, options: [], range: NSRange(location: 0, length: locator.utf16.count))
-            let str = (locator as NSString)
-            
-            var newLocator = ""
-            matches?.forEach({ (match: NSTextCheckingResult) in
-                newLocator += str.substring(with: match.range(at: 1))
-            })
-            
-            if (matches?.count > 0 && newLocator.isEmpty == false) {
-                locator = newLocator
-            }
-            
-            return locator
-        }
-        
-        let pattern = "<span class=\"sentence\">((.|\\s)*?)</span>"
-        let cleanText = removeFrom(text, withPattern: pattern)
-        return cleanText
     }
 }
