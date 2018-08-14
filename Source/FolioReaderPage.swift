@@ -219,9 +219,20 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             }
             else {
                 // migration needed
-                let fullstring = "\(highlight.contentPre)\(highlight.content)\(highlight.contentPost)"
-                if  let bookmark = self.webView?.js("migrateStringToRange('\(fullstring)', '\(highlight.content)')") {
-                    
+                let fullstring = "\(highlight.contentPre!)\(highlight.content!)\(highlight.contentPost!)"
+                if  let response = self.webView?.js("migrateStringToRange('\(fullstring)', '\(highlight.content!)')")  {
+                    let jsonData = response.data(using: String.Encoding.utf8)
+
+                    let bookmark = try! JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSDictionary
+                    if let start = bookmark["start"],
+                        let end = bookmark["end"],
+                        let uuid = self.webView?.js("guid()") {
+                        // create highlight
+                        let rangyPart = String("|\(start)$\(end)$\(uuid)$\(HighlightStyle.classForStyle(highlight.type))$")
+                        let rangyFull = String("type:textContent\(rangyPart)")
+                        highlight.addRangy(withConfiguration: self.readerConfig, rangy: rangyFull)
+                        return string + rangyPart
+                    }
                 }
                 return ""
             }

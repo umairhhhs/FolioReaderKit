@@ -237,7 +237,7 @@ function migrateStringToRange( fullString, content ) {
         withinRange: searchScopeRange,
     };
     range.findText(content);
-    var bookMark = range.getBookMark();
+    var bookMark = range.getBookmark();
     return JSON.stringify(bookMark);
 }
 

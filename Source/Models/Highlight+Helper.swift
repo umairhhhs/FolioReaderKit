@@ -99,6 +99,17 @@ extension Highlight {
         }
     }
 
+    public func addRangy(withConfiguration readerConfig: FolioReaderConfig, rangy: String) {
+        do {
+            let realm = try Realm(configuration: readerConfig.realmConfiguration)
+            realm.beginWrite()
+            self.rangy = rangy
+            try realm.commitWrite()
+        } catch let error as NSError {
+            print("Error on persist highlight: \(error)")
+        }
+    }
+    
     /// Remove a Highlight
     ///
     /// - Parameter readerConfig: Current folio reader configuration.
@@ -153,6 +164,7 @@ extension Highlight {
         }
     }
 
+    
     /// Update a Highlight by ID
     ///
     /// - Parameters:
