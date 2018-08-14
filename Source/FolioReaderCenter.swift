@@ -468,12 +468,12 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let mediaOverlayStyleColors = "\"\(self.readerConfig.mediaOverlayColor.hexString(false))\", \"\(self.readerConfig.mediaOverlayColor.highlightColor().hexString(false))\""
 
         // Inject CSS and js
-        let jsFiles = ["rangy-core", "rangy-classapplier", "rangy-highlighter", "rangy-serializer",  "Bridge" ]
+        let jsFiles = ["rangy-core", "rangy-classapplier", "rangy-textrange", "rangy-highlighter", "rangy-serializer",  "Bridge" ]
         
         var jsFilesTags: String = ""
         for jsFile in jsFiles {
             let jsFilePath = Bundle.frameworkBundle().path(forResource: jsFile, ofType: "js")
-            let jsTag = "<script type=\"text/javascript\" src=\"\(jsFilePath!)\"></script>"
+            let jsTag = "<script type=\"text/javascript\" src=\"\(jsFilePath!)\"></script>\n"
             jsFilesTags.append( jsTag )
         }
         jsFilesTags.append( "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>" )
