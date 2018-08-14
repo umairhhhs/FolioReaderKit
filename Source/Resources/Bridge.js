@@ -229,16 +229,24 @@ function clearSelection() {
 function migrateStringToRange( fullString, content ) {
     var range = rangy.createRange();
     var searchScopeRange = rangy.createRange();
-    searchScopeRange.findText(fullString);
-    
-    var options = {
+    if ( searchScopeRange.findText(fullString) ) {
+        
+        var options = {
         caseSensitive: false,
         wholeWordsOnly: false,
         withinRange: searchScopeRange,
-    };
-    range.findText(content);
-    var bookMark = range.getBookmark();
-    return JSON.stringify(bookMark);
+        };
+        if ( range.findText(content)) {
+            var bookMark = range.getBookmark();
+            return JSON.stringify(bookMark);
+        }
+        else {
+            return "{}"
+        }
+    }
+    else {
+        return "{}"
+    }
 }
 
 // Menu colors
