@@ -234,7 +234,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                         return string + rangyPart
                     }
                 }
-                return ""
+                return string
             }
         }
         if (rangies.count > 0) {
