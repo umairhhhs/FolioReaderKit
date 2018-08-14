@@ -99,11 +99,12 @@ extension Highlight {
         }
     }
 
-    public func addRangy(withConfiguration readerConfig: FolioReaderConfig, rangy: String) {
+    public func addRangy(withConfiguration readerConfig: FolioReaderConfig, id: String, rangy: String) {
         do {
             let realm = try Realm(configuration: readerConfig.realmConfiguration)
             realm.beginWrite()
             self.rangy = rangy
+            self.highlightId = id
             try realm.commitWrite()
         } catch let error as NSError {
             print("Error on persist highlight: \(error)")

@@ -230,7 +230,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                         // create highlight
                         let rangyPart = String("|\(start)$\(end)$\(uuid)$\(HighlightStyle.classForStyle(highlight.type))$")
                         let rangyFull = String("type:textContent\(rangyPart)")
-                        highlight.addRangy(withConfiguration: self.readerConfig, rangy: rangyFull)
+                        highlight.addRangy(withConfiguration: self.readerConfig, id: uuid, rangy: rangyFull)
                         return string + rangyPart
                     }
                 }
