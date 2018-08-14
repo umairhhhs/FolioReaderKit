@@ -213,8 +213,18 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         }
         let highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId, andPage: pageNumber as NSNumber?)
         var rangies = highlights.reduce("type:textContent") { (string, highlight) -> String in
-            let range = highlight.rangy!.split(separator: "|").last
-            return string + String("|\(range!)")
+            if let aRangy = highlight.rangy {
+                let range = aRangy.split(separator: "|").last
+                return string + String("|\(range!)")
+            }
+            else {
+                // migration needed
+                let fullstring = "\(highlight.contentPre)\(highlight.content)\(highlight.contentPost)"
+                if  let bookmark = self.webView?.js("migrateStringToRange('\(fullstring)', '\(highlight.content)')") {
+                    
+                }
+                return ""
+            }
         }
         if (rangies.count > 0) {
             self.webView?.js("setHighlight('\(rangies)')")

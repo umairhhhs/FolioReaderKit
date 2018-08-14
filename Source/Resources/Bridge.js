@@ -226,6 +226,21 @@ function clearSelection() {
     }
 }
 
+function migrateStringToRange( fullString, content ) {
+    var range = rangy.createRange();
+    var searchScopeRange = rangy.createRange();
+    searchScopeRange.findText(fullString);
+    
+    var options = {
+        caseSensitive: false,
+        wholeWordsOnly: false,
+        withinRange: searchScopeRange,
+    };
+    range.findText(content);
+    var bookMark = range.getBookMark();
+    return JSON.stringify(bookMark);
+}
+
 // Menu colors
 function setHighlightStyle(style) {
     // get range of highligt
