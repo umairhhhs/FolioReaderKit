@@ -1201,6 +1201,9 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         // Update current reading page
         if (isCollectionScrollView == false), let page = currentPage, let webView = page.webView {
 
+            // deselect text selection
+            webView.clearTextSelection()
+
             let pageSize = self.readerConfig.isDirection(self.pageHeight, self.pageWidth, self.pageHeight)
             let contentOffset = webView.scrollView.contentOffset.forDirection(withConfiguration: self.readerConfig)
             let contentSize = webView.scrollView.contentSize.forDirection(withConfiguration: self.readerConfig)
