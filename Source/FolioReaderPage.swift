@@ -476,7 +476,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     
     func getHighlightOffset(_ highlightId: String) -> CGFloat {
         let horizontal = self.readerConfig.scrollDirection == .horizontal
-        if let strOffset = webView?.js("getHighlightOffset('\(highlightId)', \(horizontal.description))") {
+        let function = "getHighlightOffset('\(highlightId)', '\(horizontal.description)')"
+        if let strOffset = webView?.js(function) {
             return CGFloat((strOffset as NSString).floatValue)
         }
         

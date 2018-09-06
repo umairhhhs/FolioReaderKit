@@ -334,15 +334,15 @@ var  getHighlightOffset = function(highlightId, horizontal) {
     }
     return elem.offsetTop;
 }
-var getHighlightById = function (hightlightId) {
-    var highlights = [];
+var getHighlightById = function (highlightId) {
+    var highlight;
     for ( var i in highlighter.highlights ) {
-        var highlight = highlighter.highlights[i];
-        if (parseInt(highlightId) === parseInt(highlight.id)) {
-            highlights = highlight;
+        var aHighlight = highlighter.highlights[i];
+        if (parseInt(highlightId) === parseInt(aHighlight.id)) {
+            highlight = aHighlight;
         }
     }
-    return highlights[0];
+    return highlight;
 }
 var getHighlightElementById = function (highlightId) {
    

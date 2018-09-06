@@ -256,6 +256,9 @@ extension Highlight {
         highlight.page = matchingHighlight.currentPage
         highlight.bookId = matchingHighlight.bookId
         highlight.rangy = matchingHighlight.rangy
+        if let colorClass = matchingHighlight.rangy.split(separator: "$").last  {
+            highlight.type =  HighlightStyle.styleForClass( String(colorClass) ).rawValue // type:textContent|125$132$324259$highlight-yellow$
+        }
         return highlight
         
     }
