@@ -1416,8 +1416,11 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
 
         // Go to fragment if needed
         if let fragmentID = tempFragment, let currentPage = currentPage , fragmentID != "" {
-            currentPage.handleAnchor(fragmentID, avoidBeginningAnchors: true, animated: true)
-            tempFragment = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                // your code here
+                currentPage.scrollTo(fragmentID)
+                self.tempFragment = nil
+            }
         }
         
         if (readerConfig.scrollDirection == .horizontalWithVerticalContent),
@@ -1447,7 +1450,14 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
     
     func chapterList(_ chapterList: FolioReaderChapterList, didSelectRowAtIndexPath indexPath: IndexPath, withTocReference reference: FRTocReference) {
         let item = findPageByResource(reference)
-        
+        //IID
+        if let bookTitle = book.title {
+        NotificationCenter.default.post(name: Notification.Name("GoogleAnalyticsEvent"),
+                                        object: nil,
+                                        userInfo: ["category" : "Reader-Table-of-Content",
+                                                   "action" : "content select",
+                                                   "label" : "\(bookTitle) \(reference.title)"])
+        }
         if item < totalPages {
             let indexPath = IndexPath(row: item, section: 0)
             changePageWith(indexPath: indexPath, animated: false, completion: { () -> Void in
