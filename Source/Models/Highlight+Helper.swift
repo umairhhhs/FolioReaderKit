@@ -181,7 +181,7 @@ extension Highlight {
             realm.beginWrite()
 
             highlight?.rangy = rangy
-
+            highlight?.type = styleForClass(forRangy: rangy)
             try realm.commitWrite()
             
         } catch let error as NSError {
@@ -256,11 +256,17 @@ extension Highlight {
         highlight.page = matchingHighlight.currentPage
         highlight.bookId = matchingHighlight.bookId
         highlight.rangy = matchingHighlight.rangy
-        if let colorClass = matchingHighlight.rangy.split(separator: "$").last  {
-            highlight.type =  HighlightStyle.styleForClass( String(colorClass) ).rawValue // type:textContent|125$132$324259$highlight-yellow$
-        }
+        highlight.type = styleForClass(forRangy: matchingHighlight.rangy)
         return highlight
         
+    }
+    
+    static func styleForClass(forRangy rangy: String) -> Int {
+        // type:textContent|125$132$324259$highlight-yellow$
+        guard let colorClass = rangy.split(separator: "$").last else {
+            return 0
+        }
+        return HighlightStyle.styleForClass( String(colorClass) ).rawValue
     }
 
 
