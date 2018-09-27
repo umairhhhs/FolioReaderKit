@@ -291,9 +291,38 @@ p, span, div {
     }
 }
 
-/* IID */
+
+// ###############################################################################
+// ### Change style of rheinwerk book ###
+
+span.clisting {
+    font-family: monospace, monospace !important;
+    font-size: 1em;
+}
 
 p.tabellentext
 {
     margin: 0 !important;
+}
+
+table tr {
+    vertical-align: middle !important;
+}
+
+table tr {
+    padding: 0px !important;
+}
+
+table p {
+    margin: 0px !important;
+}
+table, td, th {
+    border: 1px solid white !important;
+}
+p {
+    text-indent: 0 !important;
+}
+
+p.kastenueberschrift {
+    margin: 0 0 0 0;
 }
