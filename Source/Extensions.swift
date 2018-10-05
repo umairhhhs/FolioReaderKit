@@ -535,3 +535,9 @@ extension Array {
         return indices ~= index ? self[index] : nil
     }
 }
+
+extension Bool {
+    var intValue: Int {
+        return self ? 1 : 0
+    }
+}
