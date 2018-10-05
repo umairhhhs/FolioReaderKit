@@ -292,8 +292,7 @@ p, span, div {
 }
 
 
-// ###############################################################################
-// ### Change style of rheinwerk book ###
+/* Change style of rheinwerk book */
 
 span.clisting {
     font-family: monospace, monospace !important;
@@ -321,8 +320,13 @@ table, td, th {
 }
 p {
     text-indent: 0 !important;
+    margin: 0 0 0 0;
 }
 
 p.kastenueberschrift {
     margin: 0 0 0 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    line-height: 1.0 !important;
 }
