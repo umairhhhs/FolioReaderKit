@@ -481,8 +481,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let cssFilePath = Bundle.frameworkBundle().path(forResource: "Style", ofType: "css")
         let cssTag = "<link rel=\"stylesheet\" type=\"text/css\" href=\"\(cssFilePath!)\">"
 
-        let toInject = "<head>\n\(cssTag)\n\(jsFilesTags)\n"
-        html = html.replacingOccurrences(of: "<head>", with: toInject)
+        let toInject = "\n\(cssTag)\n\(jsFilesTags)\n</head>"
+        html = html.replacingOccurrences(of: "</head>", with: toInject)
 
         // Font class name
         var classes = folioReader.currentFont.cssIdentifier
