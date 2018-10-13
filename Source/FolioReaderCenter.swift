@@ -15,7 +15,7 @@ import ZFDragableModalTransition
     /// Notifies that a page appeared. This is triggered when a page is chosen and displayed.
     ///
     /// - Parameter page: The appeared page
-    @objc optional func pageDidAppear(_ page: FolioReaderPage)
+    @objc optional func pageDidAppear(_ page: FolioReaderPage, isFirstLoad: Bool, center: FolioReaderCenter)
 
     /// Passes and returns the HTML content as `String`. Implement this method if you want to modify the HTML content of a `FolioReaderPage`.
     ///
@@ -23,16 +23,16 @@ import ZFDragableModalTransition
     ///   - page: The `FolioReaderPage`.
     ///   - htmlContent: The current HTML content as `String`.
     /// - Returns: The adjusted HTML content as `String`. This is the content which will be loaded into the given `FolioReaderPage`.
-    @objc optional func htmlContentForPage(_ page: FolioReaderPage, htmlContent: String) -> String
+    @objc optional func htmlContentForPage(_ page: FolioReaderPage, htmlContent: String, center: FolioReaderCenter) -> String
     
     /// Notifies that a page changed. This is triggered when collection view cell is changed.
     ///
     /// - Parameter pageNumber: The appeared page item
-    @objc optional func pageItemChanged(_ pageNumber: Int)
+    @objc optional func pageItemChanged(_ pageNumber: Int, center: FolioReaderCenter)
     
     /// Notifies that a navigation bar buttons did setup.
     ///
-    /// - Parameter center: The FolioReaderCenter
+    /// - Parameter page: The appeared page
     @objc optional func navigationBarButtonsDidConfigured(center: FolioReaderCenter)
 
 }
@@ -54,6 +54,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
     /// The collection view with pages
     open var collectionView: UICollectionView!
+    
+    open var rwBook: FolioRWBook?
     
     let collectionViewLayout = UICollectionViewFlowLayout()
     var loadingView: UIActivityIndicatorView!
@@ -103,6 +105,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
     init(withContainer readerContainer: FolioReaderContainer) {
         self.readerContainer = readerContainer
+        self.rwBook = readerContainer.rwBook
         super.init(nibName: nil, bundle: Bundle.frameworkBundle())
 
         self.initialization()
@@ -487,8 +490,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let cssFilePath = Bundle.frameworkBundle().path(forResource: "Style", ofType: "css")
         let cssTag = "<link rel=\"stylesheet\" type=\"text/css\" href=\"\(cssFilePath!)\">"
 
-        let toInject = "\n\(cssTag)\n\(jsFilesTags)\n</head>"
-        html = html.replacingOccurrences(of: "</head>", with: toInject)
+        let toInject = "<head>\n\(cssTag)\n\(jsFilesTags)\n"
+        html = html.replacingOccurrences(of: "<head>", with: toInject)
 
         // Font class name
         var classes = folioReader.currentFont.cssIdentifier
@@ -505,7 +508,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         html = html.replacingOccurrences(of: "<html ", with: "<html class=\"\(classes)\"")
 
         // Let the delegate adjust the html string
-        if let modifiedHtmlContent = self.delegate?.htmlContentForPage?(cell, htmlContent: html) {
+        if let modifiedHtmlContent = self.delegate?.htmlContentForPage?(cell, htmlContent: html, center: self) {
             html = modifiedHtmlContent
         }
 
@@ -669,8 +672,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         }
         pagesForCurrentPage(currentPage)
 
-        delegate?.pageDidAppear?(currentPage)
-        delegate?.pageItemChanged?(self.getCurrentPageItemNumber())
+        delegate?.pageDidAppear?(currentPage, isFirstLoad: isFirstLoad, center: self)
+        delegate?.pageItemChanged?(self.getCurrentPageItemNumber(), center: self)
 
         completion?()
     }
@@ -915,7 +918,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         guard
             let cell = collectionView.cellForItem(at: getCurrentIndexPath()) as? FolioReaderPage,
             let contentSize = cell.webView?.scrollView.contentSize else {
-                delegate?.pageItemChanged?(getCurrentPageItemNumber())
+                delegate?.pageItemChanged?(getCurrentPageItemNumber(), center: self)
                 completion?()
                 return
         }
@@ -1232,7 +1235,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                     pageIndicatorView?.currentPage = webViewPage
                 }
                 
-                self.delegate?.pageItemChanged?(webViewPage)
+                self.delegate?.pageItemChanged?(webViewPage, center: self)
             }
         }
 
@@ -1275,7 +1278,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                 
                 if instance.totalPages > 0 {
                     instance.updateCurrentPage()
-                    instance.delegate?.pageItemChanged?(instance.getCurrentPageItemNumber())
+                    instance.delegate?.pageItemChanged?(instance.getCurrentPageItemNumber(), center: instance)
                 }
             } else {
                 self?.scrollScrubber?.scrollViewDidEndDecelerating(scrollView)
