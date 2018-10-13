@@ -29,6 +29,11 @@ import ZFDragableModalTransition
     ///
     /// - Parameter pageNumber: The appeared page item
     @objc optional func pageItemChanged(_ pageNumber: Int)
+    
+    /// Notifies that a navigation bar buttons did setup.
+    ///
+    /// - Parameter center: The FolioReaderCenter
+    @objc optional func navigationBarButtonsDidConfigured(center: FolioReaderCenter)
 
 }
 
@@ -291,6 +296,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         if(self.readerConfig.displayTitle){
             navigationItem.title = book.title
         }
+        self.delegate?.navigationBarButtonsDidConfigured?(center: self)
     }
 
     func reloadData() {
