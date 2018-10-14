@@ -468,51 +468,55 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
         setPageProgressiveDirection(cell)
 
-        // Configure the cell
-        let resource = self.book.spine.spineReferences[indexPath.row].resource
-        guard var html = try? String(contentsOfFile: resource.fullHref, encoding: String.Encoding.utf8, config: self.readerConfig) else {
-            return cell
+        DispatchQueue.global(qos: .default).async {
+            // Configure the cell
+            let resource = self.book.spine.spineReferences[indexPath.row].resource
+            guard var html = String(contentsOfFile: resource.fullHref, encoding: String.Encoding.utf8, config: self.readerConfig), !html.isEmpty else {
+                return
+            }
+            let mediaOverlayStyleColors = "\"\(self.readerConfig.mediaOverlayColor.hexString(false))\", \"\(self.readerConfig.mediaOverlayColor.highlightColor().hexString(false))\""
+            
+            // Inject CSS and js
+            let jsFiles = ["rangy-core", "rangy-classapplier", "rangy-textrange", "rangy-highlighter", "rangy-serializer",  "Bridge" ]
+            
+            var jsFilesTags: String = ""
+            for jsFile in jsFiles {
+                let jsFilePath = Bundle.frameworkBundle().path(forResource: jsFile, ofType: "js")
+                let jsTag = "<script type=\"text/javascript\" src=\"\(jsFilePath!)\"></script>\n"
+                jsFilesTags.append( jsTag )
+            }
+            jsFilesTags.append( "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>" )
+            
+            let cssFilePath = Bundle.frameworkBundle().path(forResource: "Style", ofType: "css")
+            let cssTag = "<link rel=\"stylesheet\" type=\"text/css\" href=\"\(cssFilePath!)\">"
+            
+            let toInject = "<head>\n\(cssTag)\n\(jsFilesTags)\n"
+            html = html.replacingOccurrences(of: "<head>", with: toInject)
+            
+            // Font class name
+            var classes = self.folioReader.currentFont.cssIdentifier
+            classes += " " + self.folioReader.currentMediaOverlayStyle.className()
+            
+            // Night mode
+            if self.folioReader.nightMode {
+                classes += " nightMode"
+            }
+            
+            // Font Size
+            classes += " \(self.folioReader.currentFontSize.cssIdentifier)"
+            
+            html = html.replacingOccurrences(of: "<html ", with: "<html class=\"\(classes)\"")
+            
+            // Let the delegate adjust the html string
+            if let modifiedHtmlContent = self.delegate?.htmlContentForPage?(cell, htmlContent: html, center: self) {
+                html = modifiedHtmlContent
+            }
+            DispatchQueue.main.async {
+                cell.loadHTMLString(html, baseURL: URL(fileURLWithPath: resource.fullHref.deletingLastPathComponent))
+            }
         }
-
-        let mediaOverlayStyleColors = "\"\(self.readerConfig.mediaOverlayColor.hexString(false))\", \"\(self.readerConfig.mediaOverlayColor.highlightColor().hexString(false))\""
-
-        // Inject CSS and js
-        let jsFiles = ["rangy-core", "rangy-classapplier", "rangy-textrange", "rangy-highlighter", "rangy-serializer",  "Bridge" ]
         
-        var jsFilesTags: String = ""
-        for jsFile in jsFiles {
-            let jsFilePath = Bundle.frameworkBundle().path(forResource: jsFile, ofType: "js")
-            let jsTag = "<script type=\"text/javascript\" src=\"\(jsFilePath!)\"></script>\n"
-            jsFilesTags.append( jsTag )
-        }
-        jsFilesTags.append( "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>" )
-
-        let cssFilePath = Bundle.frameworkBundle().path(forResource: "Style", ofType: "css")
-        let cssTag = "<link rel=\"stylesheet\" type=\"text/css\" href=\"\(cssFilePath!)\">"
-
-        let toInject = "<head>\n\(cssTag)\n\(jsFilesTags)\n"
-        html = html.replacingOccurrences(of: "<head>", with: toInject)
-
-        // Font class name
-        var classes = folioReader.currentFont.cssIdentifier
-        classes += " " + folioReader.currentMediaOverlayStyle.className()
-
-        // Night mode
-        if folioReader.nightMode {
-            classes += " nightMode"
-        }
-
-        // Font Size
-        classes += " \(folioReader.currentFontSize.cssIdentifier)"
-
-        html = html.replacingOccurrences(of: "<html ", with: "<html class=\"\(classes)\"")
-
-        // Let the delegate adjust the html string
-        if let modifiedHtmlContent = self.delegate?.htmlContentForPage?(cell, htmlContent: html, center: self) {
-            html = modifiedHtmlContent
-        }
-
-        cell.loadHTMLString(html, baseURL: URL(fileURLWithPath: resource.fullHref.deletingLastPathComponent))
+        
         return cell
     }
 
@@ -1503,18 +1507,22 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
 }
 //IID START
 extension String {
-    init(contentsOfFile: String, encoding: String.Encoding, config: FolioReaderConfig) {
+    init?(contentsOfFile: String, encoding: String.Encoding, config: FolioReaderConfig) {
        
         if let fileDelegate = config.fileDelegate {
-            self = config.fileDelegate!(contentsOfFile)
-            return
+            self = config.fileDelegate?(contentsOfFile) ?? ""
+            return nil
         }
 
 //        guard let string = try? String(contentsOfFile: contentsOfFile, encoding: encoding) else {
 //            self = config.decryptClosure!(contentsOfFile)
 //            return
 //        }
-        self = try! String(contentsOfFile: contentsOfFile, encoding: encoding)
+        do {
+            self = try String(contentsOfFile: contentsOfFile, encoding: encoding)
+        } catch {
+            return nil
+        }
     }
 }
 //IID END
