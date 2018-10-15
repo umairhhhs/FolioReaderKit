@@ -109,6 +109,11 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
 
     }
     
+    open override func prepareForReuse() {
+        super.prepareForReuse()
+        webView?.loadHTMLString("", baseURL: nil)
+    }
+    
     // IID
     @objc func menuDidHide() {
         self.menuIsVisible = false
