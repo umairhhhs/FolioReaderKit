@@ -1508,10 +1508,9 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
 //IID START
 extension String {
     init?(contentsOfFile: String, encoding: String.Encoding, config: FolioReaderConfig) {
-       
         if let fileDelegate = config.fileDelegate {
-            self = config.fileDelegate?(contentsOfFile) ?? ""
-            return nil
+            self = fileDelegate(contentsOfFile)
+            return
         }
 
 //        guard let string = try? String(contentsOfFile: contentsOfFile, encoding: encoding) else {
