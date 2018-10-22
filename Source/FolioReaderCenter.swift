@@ -77,7 +77,9 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     var currentPageNumber: Int = 0
     var pageWidth: CGFloat = 0.0
     var pageHeight: CGFloat = 0.0
-
+    var shouldDelayScrollingToBottomUntilWebViewDidLoad: Bool = false
+    var webViewDidLoadData: [IndexPath: Bool] = [:]
+    
     fileprivate var screenBounds: CGRect!
     fileprivate var pointNow = CGPoint.zero
     fileprivate var pageOffsetRate: CGFloat = 0
@@ -469,54 +471,53 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         setPageProgressiveDirection(cell)
 
         DispatchQueue.global(qos: .default).async {
-            // Configure the cell
             let resource = self.book.spine.spineReferences[indexPath.row].resource
-            guard var html = String(contentsOfFile: resource.fullHref, encoding: String.Encoding.utf8, config: self.readerConfig), !html.isEmpty else {
-                return
-            }
-            let mediaOverlayStyleColors = "\"\(self.readerConfig.mediaOverlayColor.hexString(false))\", \"\(self.readerConfig.mediaOverlayColor.highlightColor().hexString(false))\""
-            
-            // Inject CSS and js
-            let jsFiles = ["rangy-core", "rangy-classapplier", "rangy-textrange", "rangy-highlighter", "rangy-serializer",  "Bridge" ]
-            
-            var jsFilesTags: String = ""
-            for jsFile in jsFiles {
-                let jsFilePath = Bundle.frameworkBundle().path(forResource: jsFile, ofType: "js")
-                let jsTag = "<script type=\"text/javascript\" src=\"\(jsFilePath!)\"></script>\n"
-                jsFilesTags.append( jsTag )
-            }
-            jsFilesTags.append( "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>" )
-            
-            let cssFilePath = Bundle.frameworkBundle().path(forResource: "Style", ofType: "css")
-            let cssTag = "<link rel=\"stylesheet\" type=\"text/css\" href=\"\(cssFilePath!)\">"
-            
-            let toInject = "<head>\n\(cssTag)\n\(jsFilesTags)\n"
-            html = html.replacingOccurrences(of: "<head>", with: toInject)
-            
-            // Font class name
-            var classes = self.folioReader.currentFont.cssIdentifier
-            classes += " " + self.folioReader.currentMediaOverlayStyle.className()
-            
-            // Night mode
-            if self.folioReader.nightMode {
-                classes += " nightMode"
-            }
-            
-            // Font Size
-            classes += " \(self.folioReader.currentFontSize.cssIdentifier)"
-            
-            html = html.replacingOccurrences(of: "<html ", with: "<html class=\"\(classes)\"")
-            
-            // Let the delegate adjust the html string
-            if let modifiedHtmlContent = self.delegate?.htmlContentForPage?(cell, htmlContent: html, center: self) {
-                html = modifiedHtmlContent
-            }
-            DispatchQueue.main.async {
-                cell.loadHTMLString(html, baseURL: URL(fileURLWithPath: resource.fullHref.deletingLastPathComponent))
-            }
+            String.load(contentsOfFile: resource.fullHref, encoding: String.Encoding.utf8, config: self.readerConfig, completion: { (content) in
+                guard var html = content, !html.isEmpty else {
+                    return
+                }
+                let mediaOverlayStyleColors = "\"\(self.readerConfig.mediaOverlayColor.hexString(false))\", \"\(self.readerConfig.mediaOverlayColor.highlightColor().hexString(false))\""
+                
+                // Inject CSS and js
+                let jsFiles = ["rangy-core", "rangy-classapplier", "rangy-textrange", "rangy-highlighter", "rangy-serializer",  "Bridge" ]
+                
+                var jsFilesTags: String = ""
+                for jsFile in jsFiles {
+                    let jsFilePath = Bundle.frameworkBundle().path(forResource: jsFile, ofType: "js")
+                    let jsTag = "<script type=\"text/javascript\" src=\"\(jsFilePath!)\"></script>\n"
+                    jsFilesTags.append( jsTag )
+                }
+                jsFilesTags.append( "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>" )
+                
+                let cssFilePath = Bundle.frameworkBundle().path(forResource: "Style", ofType: "css")
+                let cssTag = "<link rel=\"stylesheet\" type=\"text/css\" href=\"\(cssFilePath!)\">"
+                
+                let toInject = "<head>\n\(cssTag)\n\(jsFilesTags)\n"
+                html = html.replacingOccurrences(of: "<head>", with: toInject)
+                
+                // Font class name
+                var classes = self.folioReader.currentFont.cssIdentifier
+                classes += " " + self.folioReader.currentMediaOverlayStyle.className()
+                
+                // Night mode
+                if self.folioReader.nightMode {
+                    classes += " nightMode"
+                }
+                
+                // Font Size
+                classes += " \(self.folioReader.currentFontSize.cssIdentifier)"
+                
+                html = html.replacingOccurrences(of: "<html ", with: "<html class=\"\(classes)\"")
+                
+                // Let the delegate adjust the html string
+                if let modifiedHtmlContent = self.delegate?.htmlContentForPage?(cell, htmlContent: html, center: self) {
+                    html = modifiedHtmlContent
+                }
+                DispatchQueue.main.async {
+                    cell.loadHTMLString(html, baseURL: URL(fileURLWithPath: resource.fullHref.deletingLastPathComponent))
+                }
+            })
         }
-        
-        
         return cell
     }
 
@@ -1264,9 +1265,29 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         }
     }
 
+    func trulyVisibleIndexPath() -> IndexPath? {
+        for indexPath in collectionView.indexPathsForVisibleItems {
+            guard let frame = collectionView.layoutAttributesForItem(at: indexPath)?.frame else {
+                continue
+            }
+            let intersectRect = frame.intersection(CGRect(x: collectionView.contentOffset.x,
+                                                          y: collectionView.contentOffset.y,
+                                                          width: collectionView.bounds.size.width,
+                                                          height: collectionView.bounds.size.height))
+            if intersectRect.width > collectionView.bounds.size.width / 2 {
+                return indexPath
+            }
+        }
+        return nil
+    }
+    
     open func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         self.isScrolling = false
-
+        if let visibleIdx = trulyVisibleIndexPath(),
+            webViewDidLoadData[visibleIdx] != true {
+            shouldDelayScrollingToBottomUntilWebViewDidLoad = true
+        }
+        
         // Perform the page after a short delay as the collection view hasn't completed it's transition if this method is called (the index paths aren't right during fast scrolls).
         delay(0.2, closure: { [weak self] in
             if (self?.readerConfig.scrollDirection == .horizontalWithVerticalContent),
@@ -1505,23 +1526,39 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
     }
     
 }
+
+
 //IID START
 extension String {
-    init?(contentsOfFile: String, encoding: String.Encoding, config: FolioReaderConfig) {
-        if let fileDelegate = config.fileDelegate {
-            self = fileDelegate(contentsOfFile)
+    static func load(contentsOfFile: String, encoding: String.Encoding, config: FolioReaderConfig,
+                     completion: @escaping (_ string: String?) -> Void) {
+        guard let fileDelegate = config.fileDelegate else {
+            do {
+                let content = try String(contentsOfFile: contentsOfFile, encoding: encoding)
+                completion(content)
+            } catch {
+                completion(nil)
+            }
             return
         }
-
-//        guard let string = try? String(contentsOfFile: contentsOfFile, encoding: encoding) else {
-//            self = config.decryptClosure!(contentsOfFile)
-//            return
-//        }
-        do {
-            self = try String(contentsOfFile: contentsOfFile, encoding: encoding)
-        } catch {
-            return nil
+        DispatchQueue.global(qos: .default).async {
+            let content = fileDelegate(contentsOfFile)
+            DispatchQueue.main.async {
+                completion(content)
+            }
         }
     }
+    
+//    init?(contentsOfFile: String, encoding: String.Encoding, config: FolioReaderConfig) {
+//        if let fileDelegate = config.fileDelegate {
+//            self = fileDelegate(contentsOfFile)
+//            return
+//        }
+//        do {
+//            self = try String(contentsOfFile: contentsOfFile, encoding: encoding)
+//        } catch {
+//            return nil
+//        }
+//    }
 }
 //IID END
