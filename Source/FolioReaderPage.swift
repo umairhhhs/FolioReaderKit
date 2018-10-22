@@ -111,6 +111,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     
     open override func prepareForReuse() {
         super.prepareForReuse()
+        webView?.stopLoading()
         webView?.loadHTMLString("", baseURL: nil)
     }
     
@@ -167,9 +168,9 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     // MARK: - Highlights
 
     fileprivate func htmlContentWithInsertHighlights(_ htmlContent: String) -> String {
-        var tempHtmlContent = htmlContent as NSString
+        let tempHtmlContent = htmlContent as NSString
         // Restore highlights
-        guard let bookId = (self.book.name as NSString?)?.deletingPathExtension else {
+        guard let _ = (self.book.name as NSString?)?.deletingPathExtension else {
             return tempHtmlContent as String
         }
         return tempHtmlContent as String
@@ -181,7 +182,25 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         guard let webView = webView as? FolioReaderWebView else {
             return
         }
+        guard !webView.didFinishLoadEmptyString else {
+            return
+        }
+        let direction: ScrollDirection = self.folioReader.needsRTLChange ? .positive(withConfiguration: self.readerConfig) : .negative(withConfiguration: self.readerConfig)
 
+        // If web page is scroll from page n to page n-1, and it did finish load before
+        // scrollViewDidEndDecelerating, keep track it
+        if let visibleIdxs = self.folioReader.readerCenter?.collectionView.indexPathsForVisibleItems,
+            let firstIdx = visibleIdxs.first,
+            self.folioReader.readerCenter?.pageScrollDirection == direction,
+            self.readerConfig.scrollDirection != .horizontalWithVerticalContent {
+            self.folioReader.readerCenter?.webViewDidLoadData.removeAll()
+            // Find min indexPath
+            var minIdx = firstIdx
+            visibleIdxs.forEach { idx in
+                minIdx = (minIdx.row < idx.row) ? minIdx : idx
+            }
+            self.folioReader.readerCenter?.webViewDidLoadData[minIdx] = true
+        }
         delegate?.pageWillLoad?(self)
 
         // Add the custom class based onClick listener
@@ -196,15 +215,15 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                 audioPlayer.readCurrentSentence()
             }
         }
-
-        let direction: ScrollDirection = self.folioReader.needsRTLChange ? .positive(withConfiguration: self.readerConfig) : .negative(withConfiguration: self.readerConfig)
-
+        
         if (self.folioReader.readerCenter?.pageScrollDirection == direction &&
-            self.folioReader.readerCenter?.isScrolling == true &&
-            self.readerConfig.scrollDirection != .horizontalWithVerticalContent) {
+            self.readerConfig.scrollDirection != .horizontalWithVerticalContent &&
+            (self.folioReader.readerCenter?.isScrolling == true ||
+             self.folioReader.readerCenter?.shouldDelayScrollingToBottomUntilWebViewDidLoad == true) ) {
+            self.folioReader.readerCenter?.shouldDelayScrollingToBottomUntilWebViewDidLoad = false
             scrollPageToBottom()
         }
-
+        
         UIView.animate(withDuration: 0.2, animations: {webView.alpha = 1}, completion: { finished in
             webView.isColors = false
             self.webView?.createMenu(options: false)
@@ -217,7 +236,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             return
         }
         let highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId, andPage: pageNumber as NSNumber?)
-        var rangies = highlights.reduce("type:textContent") { (string, highlight) -> String in
+        let rangies = highlights.reduce("type:textContent") { (string, highlight) -> String in
             if let aRangy = highlight.rangy {
                 let range = aRangy.split(separator: "|").last
                 return string + String("|\(range!)")
@@ -458,15 +477,19 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
      */
     open func scrollPageToBottom() {
         guard let webView = webView else { return }
+        let scrollHeight = webView.scrollHeight
+        let scrollWidth = webView.scrollWidth
         let bottomOffset = self.readerConfig.isDirection(
-            CGPoint(x: 0, y: webView.scrollView.contentSize.height - webView.scrollView.bounds.height),
-            CGPoint(x: webView.scrollView.contentSize.width - webView.scrollView.bounds.width, y: 0),
-            CGPoint(x: webView.scrollView.contentSize.width - webView.scrollView.bounds.width, y: 0)
+            CGPoint(x: 0, y: scrollHeight - webView.scrollView.bounds.height),
+            CGPoint(x: scrollWidth - webView.scrollView.bounds.width, y: 0),
+            CGPoint(x: scrollWidth - webView.scrollView.bounds.width, y: 0)
         )
 
         if bottomOffset.forDirection(withConfiguration: self.readerConfig) >= 0 {
             DispatchQueue.main.async {
-                self.webView?.scrollView.setContentOffset(bottomOffset, animated: false)
+                let javascript = "window.scrollBy(\(bottomOffset.x), \(bottomOffset.y))"
+                self.webView?.stringByEvaluatingJavaScript(from: javascript)
+//                self.webView?.scrollView.setContentOffset(bottomOffset, animated: false)
             }
         }
     }
