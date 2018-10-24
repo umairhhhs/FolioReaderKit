@@ -79,10 +79,6 @@ public struct ClassBasedOnClickListener {
     }
 }
 
-public protocol FolioReaderConfigFileDelegate {
-    func load(_ config: FolioReaderConfig, url: String, completion: ((_ data: String, _ error: Error?) -> Void)?)
-}
-
 // MARK: - FolioReaderConfig
 
 /**
@@ -215,7 +211,7 @@ open class FolioReaderConfig: NSObject {
     open var localizedHighlightNote = NSLocalizedString("Note", comment: "")
 
     //IID START
-    open var fileDelegate: FolioReaderConfigFileDelegate?
+    open var fileDelegate: ((String) -> String)?
     //IID END
     
     public convenience init(withIdentifier identifier: String) {
