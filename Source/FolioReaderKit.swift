@@ -114,13 +114,13 @@ open class FolioReader: NSObject {
     }
 
     /// Check if reader is open
-    var isReaderOpen = false
+    open var isReaderOpen = false
 
     /// Check if reader is open and ready
-    var isReaderReady = false
+    open var isReaderReady = false
 
     /// Check if layout needs to change to fit Right To Left
-    var needsRTLChange: Bool {
+    open var needsRTLChange: Bool {
         return (self.readerContainer?.book.spine.isRtl == true && self.readerContainer?.readerConfig.scrollDirection == .horizontal)
     }
 

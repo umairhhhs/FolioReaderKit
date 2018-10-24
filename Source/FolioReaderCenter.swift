@@ -1335,7 +1335,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
     // MARK: NavigationBar Actions
 
-    @objc func closeReader(_ sender: UIBarButtonItem) {
+    @objc open func closeReader(_ sender: UIBarButtonItem) {
         dismiss()
         folioReader.close()
     }
