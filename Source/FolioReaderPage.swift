@@ -183,6 +183,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             return
         }
         guard !webView.didFinishLoadEmptyString else {
+            webView.alpha = 1
             return
         }
         let direction: ScrollDirection = self.folioReader.needsRTLChange ? .positive(withConfiguration: self.readerConfig) : .negative(withConfiguration: self.readerConfig)
@@ -495,10 +496,10 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     }
     // IID
    
-    open func scrollTo(_ highlightId: String ) {
+    open func scrollTo(_ highlightId: String, animated: Bool) {
         if !highlightId.isEmpty {
             let offset = getHighlightOffset(highlightId)
-            scrollPageToOffset(offset, animated: false)
+            scrollPageToOffset(offset, animated: animated)
         }
     }
     

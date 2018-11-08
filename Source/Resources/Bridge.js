@@ -11,8 +11,13 @@ var audioMarkClass;
 var wordsPerMinute = 180;
 var highlighter;
 
+window.onload = setupRangy;
 
- window.onload = function() {
+if (window.addEventListener) {
+    window.addEventListener('load', setupRangy, false);
+}
+
+function setupRangy() {
  //Normal code goes here
     rangy.init();
     highlighter = rangy.createHighlighter();
