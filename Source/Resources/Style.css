@@ -40,6 +40,7 @@ html {
 body {
     padding: 40px 20px ;
     overflow: hidden ;
+    margin:0 !important;
 }
 
 * {
@@ -214,8 +215,8 @@ html.nightMode, html.nightMode body {
     background-color: #131313 ;
 }
 
-.nightMode p, .nightMode div, .nightMode span:not(.epub-media-overlay-playing) {
-    color: #767676 ;
+.nightMode p, .nightMode a, .nightMode div, .nightMode span:not(.epub-media-overlay-playing) {
+    color: #767676 !important;
     background-color: transparent ;
 }
 

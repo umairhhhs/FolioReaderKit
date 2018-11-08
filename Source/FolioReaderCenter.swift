@@ -750,7 +750,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     open func changePageWith(page: Int, andFragment fragment: String, animated: Bool = false, completion: (() -> Void)? = nil) {
         if (self.currentPageNumber == page) {
             if let currentPage = currentPage , fragment != "" {
-                currentPage.scrollTo(fragment)
+                currentPage.scrollTo(fragment, animated: true)
             }
             completion?()
         } else {
@@ -1288,7 +1288,12 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     open func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         self.isScrolling = false
-        if let visibleIdx = trulyVisibleIndexPath(),
+        // If web page is scroll from page n to page n-1, and it did finish load before
+        // scrollViewDidEndDecelerating, keep track it
+        let direction: ScrollDirection = self.folioReader.needsRTLChange ? .positive(withConfiguration: self.readerConfig) : .negative(withConfiguration: self.readerConfig)
+        if self.folioReader.readerCenter?.pageScrollDirection == direction,
+            self.readerConfig.scrollDirection != .horizontalWithVerticalContent,
+            let visibleIdx = trulyVisibleIndexPath(),
             webViewDidLoadData[visibleIdx] != true {
             shouldDelayScrollingToBottomUntilWebViewDidLoad = true
         }
@@ -1457,7 +1462,7 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         if let fragmentID = tempFragment, let currentPage = currentPage , fragmentID != "" {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                 // your code here
-                currentPage.scrollTo(fragmentID)
+                currentPage.scrollTo(fragmentID, animated: true)
                 self.tempFragment = nil
             }
         }

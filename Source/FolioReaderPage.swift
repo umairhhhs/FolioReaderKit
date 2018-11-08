@@ -495,10 +495,10 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     }
     // IID
    
-    open func scrollTo(_ highlightId: String ) {
+    open func scrollTo(_ highlightId: String, animated: Bool) {
         if !highlightId.isEmpty {
             let offset = getHighlightOffset(highlightId)
-            scrollPageToOffset(offset, animated: false)
+            scrollPageToOffset(offset, animated: animated)
         }
     }
     
