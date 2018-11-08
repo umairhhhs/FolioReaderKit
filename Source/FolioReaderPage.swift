@@ -183,6 +183,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             return
         }
         guard !webView.didFinishLoadEmptyString else {
+            webView.alpha = 1
             return
         }
         let direction: ScrollDirection = self.folioReader.needsRTLChange ? .positive(withConfiguration: self.readerConfig) : .negative(withConfiguration: self.readerConfig)
