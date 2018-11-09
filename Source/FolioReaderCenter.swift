@@ -275,12 +275,14 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let closeIcon = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint(withConfiguration: self.readerConfig)
         let tocIcon = UIImage(readerImageNamed: "icon-navbar-toc")?.ignoreSystemTint(withConfiguration: self.readerConfig)
         let fontIcon = UIImage(readerImageNamed: "icon-navbar-font")?.ignoreSystemTint(withConfiguration: self.readerConfig)
+        let imageSearch = UIImage(readerImageNamed: "icon-search")?.ignoreSystemTint(withConfiguration: self.readerConfig)
         let space = 70 as CGFloat
 
         let menu = UIBarButtonItem(image: closeIcon, style: .plain, target: self, action:#selector(closeReader(_:)))
         let toc = UIBarButtonItem(image: tocIcon, style: .plain, target: self, action:#selector(presentChapterList(_:)))
-
-        navigationItem.leftBarButtonItems = [menu, toc]
+        let iconSearch = UIBarButtonItem(image: imageSearch, style: .plain, target: self, action: #selector(didSelectSearch(_:)))
+        
+        navigationItem.leftBarButtonItems = [menu, toc, iconSearch]
 
         var rightBarIcons = [UIBarButtonItem]()
 
@@ -1269,7 +1271,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             self.pageScrollDirection = .positive(withConfiguration: self.readerConfig, scrollType: scrollType)
         }
     }
-
+    
     func trulyVisibleIndexPath() -> IndexPath? {
         for indexPath in collectionView.indexPathsForVisibleItems {
             guard let frame = collectionView.layoutAttributesForItem(at: indexPath)?.frame else {
@@ -1319,6 +1321,28 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                 self?.scrollScrubber?.scrollViewDidEndDecelerating(scrollView)
             }
         })
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+            let search = "the"
+            self.currentPage?.webView?.js("highlightSearchResult('\(search)', 1)")
+            
+//            guard let offsetX = self.currentPage?.webView?.scrollView.contentOffset.x else {
+//                return
+//            }
+//            self.currentPage?.webView?.js("createSelectionFromPoint(\(0), 1, \(0 + 200), 200)")
+//            let highlightAndReturn = self.currentPage?.webView?.js("highlightString('\(HighlightStyle.classForStyle(self.folioReader.currentHighlightStyle))')")
+//            guard let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8) else {
+//                return
+//            }
+//
+//            do {
+//                let json = try JSONSerialization.jsonObject(with: jsonData, options: []) as! NSArray
+//                let dic = json.firstObject as! [String: String]
+//
+//            } catch {
+//                print("Could not receive JSON")
+//            }
+        }
     }
 
     open func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
@@ -1430,6 +1454,15 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         nav.modalPresentationStyle = .formSheet
         
         present(nav, animated: true, completion: nil)
+    }
+    
+    @objc func didSelectSearch(_ sender: UIBarButtonItem) {
+        presentSearchView()
+    }
+    
+    func presentSearchView() {
+        let searchView = UINavigationController(rootViewController: FolioReaderSearchView(folioReader: folioReader, readerConfig: readerConfig))
+        present(searchView, animated: true, completion: nil)
     }
 }
 

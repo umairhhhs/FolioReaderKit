@@ -11,6 +11,7 @@ var audioMarkClass;
 var wordsPerMinute = 180;
 var highlighter;
 
+
 window.onload = setupRangy;
 
 if (window.addEventListener) {
@@ -18,75 +19,76 @@ if (window.addEventListener) {
 }
 
 function setupRangy() {
- //Normal code goes here
+    //Normal code goes here
     rangy.init();
     highlighter = rangy.createHighlighter();
     highlighter.addClassApplier(rangy.createClassApplier("highlight-yellow", {
-                                                      ignoreWhiteSpace: true,
-                                                      tagNames: ["span", "a"],
-                                                      elementProperties: {
-                                                         href: "#",
-                                                         onclick: function() {
-                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
-                                                            callHighlightURL(this)
-                                                         return false;
+                                                         ignoreWhiteSpace: true,
+                                                         tagNames: ["span", "a"],
+                                                         elementProperties: {
+                                                             href: "#",
+                                                             onclick: function() {
+                                                             newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                             callHighlightURL(this)
+                                                             return false;
                                                          }
-                                                      }
-                                                      }));
- 
+                                                         }
+                                                         }));
+    
     highlighter.addClassApplier(rangy.createClassApplier("highlight-green", {
-                                                      ignoreWhiteSpace: true,
-                                                      tagNames: ["span", "a"],
+                                                         ignoreWhiteSpace: true,
+                                                         tagNames: ["span", "a"],
                                                          elementProperties: {
-                                                         href: "#",
-                                                         onclick: function() {
-                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
-                                                         callHighlightURL(this)
-                                                         return false;
+                                                             href: "#",
+                                                             onclick: function() {
+                                                             newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                             callHighlightURL(this)
+                                                             return false;
                                                          }
                                                          }
-                                                      }));
- 
+                                                         }));
+    
     highlighter.addClassApplier(rangy.createClassApplier("highlight-blue", {
-                                                      ignoreWhiteSpace: true,
+                                                         ignoreWhiteSpace: true,
                                                          tagNames: ["span", "a"],
                                                          elementProperties: {
-                                                         href: "#",
-                                                         onclick: function() {
-                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
-                                                         callHighlightURL(this)
-                                                         return false;
+                                                             href: "#",
+                                                             onclick: function() {
+                                                             newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                             callHighlightURL(this)
+                                                             return false;
                                                          }
                                                          }
                                                          }));
- 
+    
     highlighter.addClassApplier(rangy.createClassApplier("highlight-pink", {
-                                                      ignoreWhiteSpace: true,
+                                                         ignoreWhiteSpace: true,
                                                          tagNames: ["span", "a"],
                                                          elementProperties: {
-                                                         href: "#",
-                                                         onclick: function() {
-                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
-                                                         callHighlightURL(this)
-                                                         return false;
+                                                             href: "#",
+                                                             onclick: function() {
+                                                             newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                             callHighlightURL(this)
+                                                             return false;
                                                          }
                                                          }
                                                          }));
- 
+    
     highlighter.addClassApplier(rangy.createClassApplier("highlight-underline", {
-                                                      ignoreWhiteSpace: true,
+                                                         ignoreWhiteSpace: true,
                                                          tagNames: ["span", "a"],
                                                          elementProperties: {
-                                                         href: "#",
-                                                         onclick: function() {
-                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
-                                                         callHighlightURL(this)
-                                                         return false;
+                                                             href: "#",
+                                                             onclick: function() {
+                                                             newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                             callHighlightURL(this)
+                                                             return false;
                                                          }
                                                          }
                                                          }));
+    
+};
 
- };
 
 
 
@@ -109,6 +111,11 @@ function guid() {
 // Get All HTML
 function getHTML() {
     return document.documentElement.outerHTML;
+}
+
+// Get HTML Body
+function getHTMLBody() {
+    return document.body.outerHTML;
 }
 
 // Class manipulation
@@ -810,3 +817,257 @@ var onClassBasedListenerClick = function(schemeName, attributeContent) {
 	// Set the custom link URL to the event
 	window.location = schemeName + "://" + attributeContent + positionParameterString;
 }
+
+function createSelectionFromPoint(startX, startY, endX, endY) {
+    var doc = document;
+    var start, end, range = null;
+    if (typeof doc.caretPositionFromPoint != "undefined") {
+        start = doc.caretPositionFromPoint(startX, startY);
+        end = doc.caretPositionFromPoint(endX, endY);
+        range = doc.createRange();
+        range.setStart(start.offsetNode, start.offset);
+        range.setEnd(end.offsetNode, end.offset);
+    } else if (typeof doc.caretRangeFromPoint != "undefined") {
+        start = doc.caretRangeFromPoint(startX, startY);
+        end = doc.caretRangeFromPoint(endX, endY);
+        range = doc.createRange();
+        range.setStart(start.startContainer, start.startOffset);
+        range.setEnd(end.startContainer, end.startOffset);
+    }
+    if (range !== null && typeof window.getSelection != "undefined") {
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    } else if (typeof doc.body.createTextRange != "undefined") {
+        range = doc.body.createTextRange();
+        range.moveToPoint(startX, startY);
+        var endRange = range.duplicate();
+        endRange.moveToPoint(endX, endY);
+        range.setEndPoint("EndToEnd", endRange);
+        range.select();
+    }
+}
+
+var searchResults = [];
+var lastSearchQuery = null;
+var testCounter = 0;
+var searchResultsInvisible = true;
+
+// Testing purpose calls
+function test() {
+    
+    ++testCounter;
+    console.log("-> testCounter = " + testCounter);
+    
+    var searchQuery = "look";
+    
+    if (testCounter == 1) {
+        
+        getCompatMode();
+        wrappingSentencesWithinPTags();
+        
+        if (FolioPageFragment.getDirection() == "HORIZONTAL")
+            initHorizontalDirection();
+        
+        highlightSearchResult(searchQuery, 1);
+        
+    } else if (testCounter == 2) {
+        
+        makeSearchResultsInvisible();
+        
+    } else if (testCounter == 3) {
+        
+        highlightSearchResult(searchQuery, 2);
+        
+    } else if (testCounter == 4) {
+        
+    }
+}
+
+function highlightSearchResult(searchQuery, occurrenceInChapter) {
+    
+    if (searchQuery == lastSearchQuery) {
+        makeSearchResultsInvisible();
+    } else {
+        resetSearchResults();
+        searchResults = applySearchResultClass(searchQuery);
+        console.debug("-> Search Query Found = " + searchResults.length);
+    }
+    
+    applySearchResultVisibleClass(occurrenceInChapter);
+}
+
+function applySearchResultClass(searchQuery) {
+    
+    var searchQueryRegExp = new RegExp(escapeRegExp(searchQuery), "i");
+    
+    var searchResults = [];
+    var searchChildNodesArray = [];
+    var elementArray = [];
+    var textNodeArray = [];
+    
+    var bodyElement = document.getElementsByTagName('body')[0];
+    var elementsInBody = bodyElement.getElementsByTagName('*');
+    
+    for (var i = 0 ; i < elementsInBody.length ; i++) {
+        
+        var childNodes = elementsInBody[i].childNodes;
+        
+        for (var j = 0; j < childNodes.length; j++) {
+            
+            if (childNodes[j].nodeType == Node.TEXT_NODE &&
+                childNodes[j].nodeValue.trim().length) {
+                //console.log("-> " + childNodes[j].nodeValue);
+                
+                if (childNodes[j].nodeValue.match(searchQueryRegExp)) {
+                    //console.log("-> Found -> " + childNodes[j].nodeValue);
+                    
+                    searchChildNodesArray.push(
+                                               getSearchChildNodes(childNodes[j].nodeValue, searchQuery));
+                    
+                    elementArray.push(elementsInBody[i]);
+                    textNodeArray.push(childNodes[j]);
+                }
+            }
+        }
+    }
+    
+    for (var i = 0 ; i < searchChildNodesArray.length ; i++) {
+        
+        var searchChildNodes = searchChildNodesArray[i];
+        
+        for (var j = 0 ; j < searchChildNodes.length ; j++) {
+            
+            if (searchChildNodes[j].className == "search-result")
+                searchResults.push(searchChildNodes[j]);
+            elementArray[i].insertBefore(searchChildNodes[j], textNodeArray[i]);
+        }
+        
+        elementArray[i].removeChild(textNodeArray[i]);
+    }
+    
+    lastSearchQuery = searchQuery;
+    return searchResults;
+}
+
+function getSearchChildNodes(text, searchQuery) {
+    
+    var arrayIndex = [];
+    var matchIndexStart = -1;
+    var textChunk = "";
+    var searchChildNodes = [];
+    
+    for (var i = 0, j = 0 ; i < text.length ; i++) {
+        
+        textChunk += text[i];
+        
+        if (text[i].match(new RegExp(escapeRegExp(searchQuery[j]), "i"))) {
+            
+            if (matchIndexStart == -1)
+                matchIndexStart = i;
+            
+            if (searchQuery.length == j + 1) {
+                
+                var textNode = document.createTextNode(
+                                                       textChunk.substring(0, textChunk.length - searchQuery.length));
+                
+                var searchNode = document.createElement("span");
+                searchNode.className = "search-result";
+                var queryTextNode = document.createTextNode(
+                                                            text.substring(matchIndexStart, matchIndexStart + searchQuery.length));
+                searchNode.appendChild(queryTextNode);
+                
+                searchChildNodes.push(textNode);
+                searchChildNodes.push(searchNode);
+                
+                arrayIndex.push(matchIndexStart);
+                matchIndexStart = -1;
+                j = 0;
+                textChunk = "";
+                
+            } else {
+                j++;
+            }
+            
+        } else {
+            matchIndexStart = -1;
+            j = 0;
+        }
+    }
+    
+    if (textChunk !== "") {
+        var textNode = document.createTextNode(textChunk);
+        searchChildNodes.push(textNode);
+    }
+    
+    return searchChildNodes;
+}
+
+function makeSearchResultsVisible() {
+    
+    for (var i = 0 ; i < searchResults.length ; i++) {
+        searchResults[i].className = "search-result-visible";
+    }
+    searchResultsInvisible = false;
+}
+
+function makeSearchResultsInvisible() {
+    
+    if (searchResultsInvisible)
+        return;
+    for (var i = 0 ; i < searchResults.length ; i++) {
+        if (searchResults[i].className == "search-result-visible")
+            searchResults[i].className = "search-result-invisible";
+    }
+    searchResultsInvisible = true;
+}
+
+function applySearchResultVisibleClass(occurrenceInChapter) {
+    
+    var searchResult = searchResults[occurrenceInChapter - 1];
+    if (searchResult === undefined)
+        return;
+    searchResult.className = "search-result-visible";
+    searchResultsInvisible = false;
+    
+    scrollToElement(searchResult);
+}
+
+function resetSearchResults() {
+    
+    for (var i = 0 ; i < searchResults.length ; i++) {
+        searchResults[i].outerHTML = searchResults[i].innerHTML;
+    }
+    
+    searchResults = [];
+    lastSearchQuery = null;
+    searchResultsInvisible = true;
+}
+
+function escapeRegExp(str) {
+    return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+}
+
+function scrollToElement(element) {
+    
+    var scrollingElement = bodyOrHtml();
+    var clientWidth = document.documentElement.clientWidth;
+    var pageIndex = Math.floor(element.offsetLeft / clientWidth);
+    var newScrollLeft = clientWidth * pageIndex;
+    //console.log("-> newScrollLeft = " + newScrollLeft);
+    scrollingElement.scrollLeft = newScrollLeft;
+    
+    return element;
+}
+
+function bodyOrHtml() {
+    if ('scrollingElement' in document) {
+        return document.scrollingElement;
+    }
+    // Fallback for legacy browsers
+    if (navigator.userAgent.indexOf('WebKit') != -1) {
+        return document.body;
+    }
+    return document.documentElement;
+}
+

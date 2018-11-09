@@ -81,6 +81,7 @@ public struct ClassBasedOnClickListener {
 
 public protocol FolioReaderConfigFileDelegate {
     func load(_ config: FolioReaderConfig, url: String, completion: ((_ data: String, _ error: Error?) -> Void)?)
+    func loadSync(_ config: FolioReaderConfig, url: String) -> String
 }
 
 // MARK: - FolioReaderConfig

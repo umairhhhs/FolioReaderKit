@@ -157,6 +157,16 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         )
     }
 
+    func getHTML()-> String? {
+        let html = self.webView?.js("getHTML()")
+        return html
+    }
+    
+    func getHTMLBody()-> String? {
+        let htmlBody = self.webView?.js("getHTMLBody()")
+        return htmlBody
+    }
+    
     func loadHTMLString(_ htmlContent: String!, baseURL: URL!) {
         // Insert the stored highlights to the HTML
         let tempHtmlContent = htmlContentWithInsertHighlights(htmlContent)
