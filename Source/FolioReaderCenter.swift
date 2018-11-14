@@ -33,7 +33,7 @@ import ZFDragableModalTransition
     /// Notifies that a navigation bar buttons did setup.
     ///
     /// - Parameter page: The appeared page
-    @objc optional func navigationBarButtonsDidConfigured(center: FolioReaderCenter)
+    @objc optional func navigationBarButtonsDidConfigure(center: FolioReaderCenter)
 
 }
 
@@ -83,8 +83,24 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     var webViewDidLoadData: [IndexPath: Bool] = [:]
     private var tempSearchResult: SearchResult?
     private lazy var searchView: UINavigationController = {
-        return UINavigationController(rootViewController: FolioReaderSearchView(folioReader: folioReader, readerConfig: readerConfig))
+        let navigationController = UINavigationController(rootViewController: FolioReaderSearchView(folioReader: folioReader, readerConfig: readerConfig))
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            return navigationController
+        }
+        navigationController.navigationBar.barTintColor = #colorLiteral(red: 0.137254902, green: 0.3411764706, blue: 0.5882352941, alpha: 1)
+        navigationController.navigationBar.titleTextAttributes = [NSAttributedStringKey.foregroundColor: UIColor.white , NSAttributedStringKey.font: UIFont.boldSystemFont(ofSize: 17)]
+        navigationController.navigationBar.isTranslucent = false
+        return navigationController
     }()
+    private var searchItem: UIBarButtonItem?
+    open var allowSearchThisBook: Bool = false {
+        didSet {
+            DispatchQueue.runTaskOnMainThread {
+                self.searchItem?.isEnabled = self.allowSearchThisBook
+                self.searchItem?.tintColor = self.allowSearchThisBook ? self.readerConfig.tintColor : UIColor.clear
+            }
+        }
+    }
     // End
     
     fileprivate var screenBounds: CGRect!
@@ -282,14 +298,15 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let closeIcon = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint(withConfiguration: self.readerConfig)
         let tocIcon = UIImage(readerImageNamed: "icon-navbar-toc")?.ignoreSystemTint(withConfiguration: self.readerConfig)
         let fontIcon = UIImage(readerImageNamed: "icon-navbar-font")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let imageSearch = UIImage(readerImageNamed: "icon-search")?.ignoreSystemTint(withConfiguration: self.readerConfig)
+        let imageSearch = UIImage(readerImageNamed: "icon-search")
         let space = 70 as CGFloat
 
         let menu = UIBarButtonItem(image: closeIcon, style: .plain, target: self, action:#selector(closeReader(_:)))
         let toc = UIBarButtonItem(image: tocIcon, style: .plain, target: self, action:#selector(presentChapterList(_:)))
-        let iconSearch = UIBarButtonItem(image: imageSearch, style: .plain, target: self, action: #selector(didSelectSearch(_:)))
+        searchItem = UIBarButtonItem(image: imageSearch, style: .plain, target: self, action: #selector(didSelectSearch(_:)))
+        searchItem?.tintColor = readerConfig.tintColor
         
-        navigationItem.leftBarButtonItems = [menu, toc, iconSearch]
+        navigationItem.leftBarButtonItems = [menu, toc, searchItem ?? UIBarButtonItem()]
 
         var rightBarIcons = [UIBarButtonItem]()
 
@@ -310,7 +327,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         if(self.readerConfig.displayTitle){
             navigationItem.title = book.title
         }
-        self.delegate?.navigationBarButtonsDidConfigured?(center: self)
+        self.delegate?.navigationBarButtonsDidConfigure?(center: self)
     }
 
     func reloadData() {
@@ -1393,6 +1410,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     @objc open func closeReader(_ sender: UIBarButtonItem) {
         dismiss()
         folioReader.close()
+        (searchView.topViewController as? FolioReaderSearchView)?.willDeinitView()
     }
 
     /**
@@ -1483,6 +1501,18 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     @objc func didSelectSearch(_ sender: UIBarButtonItem) {
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            present(searchView, animated: true, completion: nil)
+            return
+        }
+        searchView.preferredContentSize = CGSize(width: 400, height: 600)
+        searchView.modalPresentationStyle = .popover
+        guard let popover = searchView.popoverPresentationController else {
+            return
+        }
+        popover.permittedArrowDirections = .up
+        popover.barButtonItem = sender
+        popover.backgroundColor = #colorLiteral(red: 0.137254902, green: 0.3411764706, blue: 0.5882352941, alpha: 1)
         present(searchView, animated: true, completion: nil)
     }
 }
@@ -1603,7 +1633,9 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
 
 //IID START
 extension String {
-    static func load(contentsOfFile: String, encoding: String.Encoding, config: FolioReaderConfig,
+    static func load(contentsOfFile: String,
+                     encoding: String.Encoding = String.Encoding.utf8,
+                     config: FolioReaderConfig,
                      completion: @escaping (_ string: String?, _ error: Error?) -> Void) {
         guard let fileDelegate = config.fileDelegate else {
             do {
@@ -1619,6 +1651,20 @@ extension String {
                 completion(content, error)
             }
         })
+    }
+    
+    static func loadSync(contentsOfFile: String,
+                         encoding: String.Encoding = String.Encoding.utf8,
+                         config: FolioReaderConfig) -> String {
+        guard let fileDelegate = config.fileDelegate else {
+            do {
+                let content = try String(contentsOfFile: contentsOfFile, encoding: encoding)
+                return content
+            } catch {
+                return ""
+            }
+        }
+        return fileDelegate.loadSync(config, url: contentsOfFile)
     }
 }
 //IID END

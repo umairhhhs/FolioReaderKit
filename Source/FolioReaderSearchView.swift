@@ -23,6 +23,8 @@ open class SectionSearchResult {
 
 class FolioReaderSearchView: UIViewController {
   
+    private let minimumResultsOfPossible = 20
+    private let loadMoreTriggerThreshold = 15
     private var searchBar: UISearchBar!
     private var table: UITableView!
     private var matchesStrArray:[String] = []
@@ -31,6 +33,11 @@ class FolioReaderSearchView: UIViewController {
     private var isSearchCompleted: Bool = true {
         didSet {
             print("isSearchCompleted = \(isSearchCompleted)")
+            if isSearchCompleted == true {
+                DispatchQueue.main.async {
+                    self.table.tableFooterView = self.viewForLoadingMore(withText: "Found \(self.matchesStrArray.count) results")
+                }
+            }
         }
     }
     private var currentFileIndex: Int = 0
@@ -70,16 +77,16 @@ class FolioReaderSearchView: UIViewController {
         
         searchBar = UISearchBar();
         searchBar.delegate = self
-        searchBar.frame = .zero
         searchBar.showsCancelButton = false
         searchBar.placeholder = "Search in this book"
         navigationItem.titleView = searchBar
         
         addTableView()
     
-        let closeImage = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint(withConfiguration: readerConfig)
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: closeImage, style: .plain, target: self, action: #selector(dismissView))
-    
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            let closeImage = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint(withConfiguration: readerConfig)
+            self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: closeImage, style: .plain, target: self, action: #selector(dismissView))
+        }
         total = self.folioReader.readerContainer?.book.flatTableOfContents.count ?? 0
     }
     
@@ -149,11 +156,24 @@ class FolioReaderSearchView: UIViewController {
                     var sectionSearchResult = SectionSearchResult.init()
                     sectionSearchResult.tocReference = tocRef
                     sectionSearchResult.results = innerResults
+                    
+                    func checkPauseSearchingInGlobalLoopIfNeeded() {
+                        if j == maxFileIndex - 1 {
+                            self.pauseSearchingIfNeeded(currentLoop: j, maxLoop: maxFileIndex)
+                            if self.matchesStrArray.count < self.minimumResultsOfPossible {
+                                OperationQueue.main.addOperation {
+                                    self.searchInThisBook(fileIndex: self.currentFileIndex)
+                                }
+                            }
+                        }
+                    }
                     // Load html from file
-                    let mHtml = try? String(contentsOfFile: tocRef?.resource?.fullHref ?? "", encoding: String.Encoding.utf8)
-                    guard let document = try? SwiftSoup.parse(mHtml ?? ""),
+                    let mHtml = String.loadSync(contentsOfFile: tocRef?.resource?.fullHref ?? "",
+                                                config: self.readerConfig)
+                    guard let document = try? SwiftSoup.parse(mHtml),
                         let html = try? document.text(), !html.isEmpty
                     else {
+                        checkPauseSearchingInGlobalLoopIfNeeded()
                         return
                     }
                     if operation.isCancelled == true {
@@ -161,14 +181,7 @@ class FolioReaderSearchView: UIViewController {
                     }
                     var mMatches = regex.matches(input: html)
                     guard let matches = mMatches, matches.count > 0 else {
-                        if j == maxFileIndex - 1 {
-                            self.pauseSearchingIfNeeded(currentLoop: j, maxLoop: maxFileIndex)
-                            if self.matchesStrArray.count < 30 {
-                                OperationQueue.main.addOperation {
-                                    self.searchInThisBook(fileIndex: self.currentFileIndex)
-                                }
-                            }
-                        }
+                        checkPauseSearchingInGlobalLoopIfNeeded()
                         return
                     }
                     for i in 0..<matches.count {
@@ -176,10 +189,10 @@ class FolioReaderSearchView: UIViewController {
                             return
                         }
                         // Inner method
-                        func checkPauseSearchingIfNeeded() {
+                        func checkPauseSearchingInMatchesLoopIfNeeded() {
                             if j == maxFileIndex - 1 && i == matches.count - 1 {
                                 self.pauseSearchingIfNeeded(currentLoop: j, maxLoop: maxFileIndex)
-                                if self.matchesStrArray.count < 30 {
+                                if self.matchesStrArray.count < self.minimumResultsOfPossible {
                                     OperationQueue.main.addOperation {
                                         self.searchInThisBook(fileIndex: self.currentFileIndex)
                                     }
@@ -188,7 +201,7 @@ class FolioReaderSearchView: UIViewController {
                         }
                         var matchStr = self.extractText(from: matches[i], fullHtml: html)
                         if matchStr.isEmpty {
-                            checkPauseSearchingIfNeeded()
+                            checkPauseSearchingInMatchesLoopIfNeeded()
                             continue
                         }
                         matchStr = "...\(matchStr) ..."
@@ -198,7 +211,7 @@ class FolioReaderSearchView: UIViewController {
                         synchronized(self, {
                             self.matchesStrArray.append(matchStr)
                             if j == maxFileIndex - 1 && i == matches.count - 1 {
-                                checkPauseSearchingIfNeeded()
+                                checkPauseSearchingInMatchesLoopIfNeeded()
                             }
                         })
                     }
@@ -221,8 +234,41 @@ class FolioReaderSearchView: UIViewController {
                 self.renderingOperationQueue.addOperation(operation)
             }
         }
-        
     }
+    
+    func viewForLoadingMore(withText text: String?) -> UIView {
+        let container = UIView(frame: CGRect(origin: .zero, size: CGSize(width: table.bounds.width, height: 44)))
+        let sub: UIView
+        if let mText = text {
+            let label = UILabel()
+            label.translatesAutoresizingMaskIntoConstraints = false
+            label.text = mText
+            label.font = UIFont.systemFont(ofSize: 15)
+            label.textAlignment = .center
+            sub = label
+        } else {
+            let activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .gray)
+            activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+            activityIndicator.startAnimating()
+            sub = activityIndicator
+        }
+        container.addSubview(sub)
+        centerView(sub, inContainer: container)
+        return container
+    }
+    
+    internal func centerView(_ view: UIView, inContainer container: UIView) {
+        let attributes: [NSLayoutAttribute] = [.centerX, .centerY]
+        apply(attributes, ofView: view, toView: container)
+    }
+    internal func apply(_ attributes: [NSLayoutAttribute], ofView childView: UIView, toView containerView: UIView) {
+        let constraints = attributes.map {
+            return NSLayoutConstraint(item: childView, attribute: $0, relatedBy: .equal,
+                                      toItem: containerView, attribute: $0, multiplier: 1, constant: 0)
+        }
+        containerView.addConstraints(constraints)
+    }
+
     
     private func extractText(from match: NSTextCheckingResult, fullHtml: String) -> String {
         let location = max(0, match.range.location - 40)
@@ -265,15 +311,17 @@ extension FolioReaderSearchView: UISearchBarDelegate {
         matchesStrArray.removeAll()
         searchResults.removeAll()
         table?.reloadData()
+        table.tableFooterView = UIView()
     }
     
     public func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchInThisBook()
+        table.tableFooterView = viewForLoadingMore(withText: nil)
         searchBar.resignFirstResponder()
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if searchText.isEmpty {
+        if searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             clearAllSearchs()
         }
     }
@@ -326,23 +374,32 @@ extension FolioReaderSearchView: UITableViewDataSource {
         guard section.results.count > indexPath.row else {
             return cell
         }
-        cell.textLabel?.numberOfLines = 0
-        
+        cell.textLabel?.adjustsFontSizeToFitWidth = true
+        cell.textLabel?.minimumScaleFactor = 0.8
+        cell.textLabel?.numberOfLines = 2
         let text = NSMutableAttributedString(string: section.results[indexPath.row].fullText)
-        let range = NSRange(location: 0, length: text.length)
         text.addAttribute(NSAttributedStringKey.backgroundColor, value: UIColor.yellow, range: section.results[indexPath.row].highlightRange)
         cell.textLabel?.attributedText = text
-        if isSearching == false &&
-            isSearchCompleted == false &&
-            table.rowCountUntilSection(section: indexPath.section - 1) + indexPath.row >= self.matchesStrArray.count - 20 {
+        
+        if shouldLoadMore(for: indexPath) {
             searchInThisBook(fileIndex: currentFileIndex)
         }
         return cell
+    }
+    
+    private func shouldLoadMore(for indexPath: IndexPath) -> Bool {
+        if isSearching == false &&
+            isSearchCompleted == false &&
+            table.rowCountUntilSection(section: indexPath.section - 1) + indexPath.row + 1 >= self.matchesStrArray.count - loadMoreTriggerThreshold {
+            return true
+        }
+        return false
     }
 }
 
 extension FolioReaderSearchView: UITableViewDelegate {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
         guard searchResults.count > indexPath.section else {
             return
         }
