@@ -34,7 +34,7 @@ class FolioReaderSearchView: UIViewController {
         didSet {
             print("isSearchCompleted = \(isSearchCompleted)")
             if isSearchCompleted == true {
-                DispatchQueue.main.async {
+                DispatchQueue.runTaskOnMainThread {
                     self.table.tableFooterView = self.viewForLoadingMore(withText: "Found \(self.matchesStrArray.count) results")
                 }
             }
@@ -46,9 +46,9 @@ class FolioReaderSearchView: UIViewController {
     private var readerConfig: FolioReaderConfig
     private var searchResults: [SectionSearchResult] = []
     
-    lazy var renderingOperationQueue: OperationQueue = {
+    lazy var searchingOperationQueue: OperationQueue = {
         let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 1
+        queue.maxConcurrentOperationCount = 8
         return queue
     }()
     
@@ -69,7 +69,7 @@ class FolioReaderSearchView: UIViewController {
     }
     
     deinit {
-        renderingOperationQueue.cancelAllOperations()
+        cancelAllSearchingOperations()
     }
     
     override func viewDidLoad() {
@@ -115,7 +115,7 @@ class FolioReaderSearchView: UIViewController {
     }
     
     private func cancelAllSearchingOperations() {
-        renderingOperationQueue.cancelAllOperations()
+        searchingOperationQueue.cancelAllOperations()
     }
     
     private func pauseSearchingIfNeeded(currentLoop: Int, maxLoop: Int) {
@@ -222,16 +222,15 @@ class FolioReaderSearchView: UIViewController {
                         }
                     })
                 })
-                let numOfResults = self.matchesStrArray.count
                 operation.completionBlock = {
-                    guard numOfResults != self.matchesStrArray.count else {
-                        return
-                    }
-                    DispatchQueue.main.async {
+                    DispatchQueue.runTaskOnMainThread {
+                        if self.table.rowsCount == self.matchesStrArray.count {
+                            return
+                        }
                         self.table.reloadData()
                     }
                 }
-                self.renderingOperationQueue.addOperation(operation)
+                self.searchingOperationQueue.addOperation(operation)
             }
         }
     }
@@ -390,7 +389,7 @@ extension FolioReaderSearchView: UITableViewDataSource {
     private func shouldLoadMore(for indexPath: IndexPath) -> Bool {
         if isSearching == false &&
             isSearchCompleted == false &&
-            table.rowCountUntilSection(section: indexPath.section - 1) + indexPath.row + 1 >= self.matchesStrArray.count - loadMoreTriggerThreshold {
+            table.rowCountUntilBeforeSection(section: indexPath.section) + indexPath.row + 1 >= self.matchesStrArray.count - loadMoreTriggerThreshold {
             return true
         }
         return false
