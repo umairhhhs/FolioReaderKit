@@ -104,6 +104,10 @@ class FolioReaderSearchView: UIViewController {
     }
     
     func willDeinitView() {
+        cancelAllSearchingOperations()
+    }
+    
+    private func cancelAllSearchingOperations() {
         renderingOperationQueue.cancelAllOperations()
     }
     
@@ -138,6 +142,9 @@ class FolioReaderSearchView: UIViewController {
                     guard let `self` = self else {
                         return
                     }
+                    if operation.isCancelled == true {
+                        return
+                    }
                     var innerResults: [SearchResult] = []
                     var sectionSearchResult = SectionSearchResult.init()
                     sectionSearchResult.tocReference = tocRef
@@ -147,6 +154,9 @@ class FolioReaderSearchView: UIViewController {
                     guard let document = try? SwiftSoup.parse(mHtml ?? ""),
                         let html = try? document.text(), !html.isEmpty
                     else {
+                        return
+                    }
+                    if operation.isCancelled == true {
                         return
                     }
                     var mMatches = regex.matches(input: html)
@@ -251,6 +261,7 @@ extension FolioReaderSearchView: UISearchBarDelegate {
     }
     
     private func clearAllSearchs() {
+        cancelAllSearchingOperations()
         matchesStrArray.removeAll()
         searchResults.removeAll()
         table?.reloadData()
