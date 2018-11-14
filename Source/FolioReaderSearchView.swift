@@ -199,7 +199,11 @@ class FolioReaderSearchView: UIViewController {
                         }
                     })
                 })
+                let numOfResults = self.matchesStrArray.count
                 operation.completionBlock = {
+                    guard numOfResults != self.matchesStrArray.count else {
+                        return
+                    }
                     DispatchQueue.main.async {
                         self.table.reloadData()
                     }
@@ -268,6 +272,24 @@ extension FolioReaderSearchView: UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
         print("matchesStrArray.count \(self.matchesStrArray.count)")
         return searchResults.count
+    }
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let headerView = UIView.init(frame: CGRect.init(x: 0, y: 0, width: tableView.frame.width, height: 34))
+        headerView.backgroundColor = UIColor(red: 247/255, green: 247/255, blue: 247/255, alpha: 1)
+        let label = UILabel()
+        label.frame = CGRect.init(x: 15, y: 0, width: headerView.frame.width - 30, height: headerView.frame.height)
+        label.font = UIFont.boldSystemFont(ofSize: 15)
+        headerView.addSubview(label)
+        guard searchResults.count > section else {
+            return nil
+        }
+        label.text = searchResults[section].tocReference?.title
+        return headerView
+    }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 34
     }
     
     func tableView(_ table: UITableView, numberOfRowsInSection section: Int) -> Int {
