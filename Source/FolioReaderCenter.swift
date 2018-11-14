@@ -77,8 +77,15 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     var currentPageNumber: Int = 0
     var pageWidth: CGFloat = 0.0
     var pageHeight: CGFloat = 0.0
+    
+    // Added by DungLe
     var shouldDelayScrollingToBottomUntilWebViewDidLoad: Bool = false
     var webViewDidLoadData: [IndexPath: Bool] = [:]
+    private var tempSearchResult: SearchResult?
+    private lazy var searchView: UINavigationController = {
+        return UINavigationController(rootViewController: FolioReaderSearchView(folioReader: folioReader, readerConfig: readerConfig))
+    }()
+    // End
     
     fileprivate var screenBounds: CGRect!
     fileprivate var pointNow = CGPoint.zero
@@ -677,11 +684,11 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
         scrollScrubber?.setSliderVal()
 
-        if let readingTime = currentPage.webView?.js("getReadingTime()") {
-            pageIndicatorView?.totalMinutes = Int(readingTime)!
-        } else {
-            pageIndicatorView?.totalMinutes = 0
-        }
+//        if let readingTime = currentPage.webView?.js("getReadingTime()") {
+//            pageIndicatorView?.totalMinutes = Int(readingTime)!
+//        } else {
+//            pageIndicatorView?.totalMinutes = 0
+//        }
         pagesForCurrentPage(currentPage)
 
         delegate?.pageDidAppear?(currentPage, isFirstLoad: isFirstLoad, center: self)
@@ -763,6 +770,28 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                 }
             })
         }
+    }
+    
+    
+    
+    open func changePageWith(reference: FRTocReference, searchResult: SearchResult, animated: Bool = false) {
+        
+        let item = findPageByResource(reference)
+        guard item < totalPages else {
+            print("Failed to load book because the requested resource is missing.")
+            return
+        }
+        // Scroll to a result in current page
+        if self.currentPageNumber - 1 == item, item >= 0 {
+            currentPage?.scrollTo(searchResult: searchResult, animated: true)
+            return
+        }
+        // Load page at index path and scroll to result
+        let indexPath = IndexPath(row: item, section: 0)
+        changePageWith(indexPath: indexPath, animated: false, completion: { () -> Void in
+            self.updateCurrentPage()
+        })
+        tempSearchResult = searchResult
     }
 
     open func changePageWith(href: String, animated: Bool = false, completion: (() -> Void)? = nil) {
@@ -1322,10 +1351,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             }
         })
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-            let search = "the"
-            self.currentPage?.webView?.js("highlightSearchResult('\(search)', 1)")
-            
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0) {            
 //            guard let offsetX = self.currentPage?.webView?.scrollView.contentOffset.x else {
 //                return
 //            }
@@ -1457,11 +1483,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     @objc func didSelectSearch(_ sender: UIBarButtonItem) {
-        presentSearchView()
-    }
-    
-    func presentSearchView() {
-        let searchView = UINavigationController(rootViewController: FolioReaderSearchView(folioReader: folioReader, readerConfig: readerConfig))
         present(searchView, animated: true, completion: nil)
     }
 }
@@ -1497,6 +1518,15 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
                 // your code here
                 currentPage.scrollTo(fragmentID, animated: true)
                 self.tempFragment = nil
+            }
+        }
+        
+        // Go to search result if needed
+        if let searchResult = tempSearchResult, let currentPage = currentPage {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0) {
+                // your code here
+               currentPage.scrollTo(searchResult: searchResult, animated: true)
+                self.tempSearchResult = nil
             }
         }
         

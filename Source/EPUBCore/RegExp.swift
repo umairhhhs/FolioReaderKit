@@ -14,24 +14,13 @@ class RegExp {
     
     init(_ pattern: String) {
         self.pattern = pattern
-        self.internalRegexp = try! NSRegularExpression( pattern: pattern, options: NSRegularExpression.Options.caseInsensitive)
-    }
-    
-    func isMatch(input: String) -> Bool {
-        let matches = self.internalRegexp.matches( in: input, options: [], range:NSMakeRange(0, input.characters.count) )
-        return matches.count > 0
+        self.internalRegexp = (try? NSRegularExpression(pattern: pattern, options: NSRegularExpression.Options.caseInsensitive)) ?? NSRegularExpression()
     }
     
     func matches(input: String) -> [NSTextCheckingResult]? {
         let matches = self.internalRegexp.matches( in: input, options: [], range:NSMakeRange(0, input.characters.count))
-        if matches.count > 0 {   //マッチがあるなら
+        if matches.count > 0 {
             return matches
-            
-            /*var results: [String] = []
-            for i in 0 ..< matches.count {
-                results.append( (input as NSString).substringWithRange(matches[i].range) )
-            }
-            return results*/
         }
         return nil
     }

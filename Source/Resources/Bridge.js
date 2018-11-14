@@ -894,7 +894,7 @@ function highlightSearchResult(searchQuery, occurrenceInChapter) {
         console.debug("-> Search Query Found = " + searchResults.length);
     }
     
-    applySearchResultVisibleClass(occurrenceInChapter);
+    return applySearchResultVisibleClass(occurrenceInChapter);
 }
 
 function applySearchResultClass(searchQuery) {
@@ -1030,8 +1030,10 @@ function applySearchResultVisibleClass(occurrenceInChapter) {
     searchResult.className = "search-result-visible";
     searchResultsInvisible = false;
     
-    scrollToElement(searchResult);
+    return getOffsetOfElement(searchResult, true);
 }
+
+
 
 function resetSearchResults() {
     
@@ -1048,16 +1050,15 @@ function escapeRegExp(str) {
     return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 
+function getOffsetOfElement(elem, horizontal) {
+    if (horizontal) {
+        return document.body.clientWidth * Math.floor(elem.offsetTop / window.innerHeight);
+    }
+    return elem.offsetTop;
+}
+
 function scrollToElement(element) {
-    
-    var scrollingElement = bodyOrHtml();
-    var clientWidth = document.documentElement.clientWidth;
-    var pageIndex = Math.floor(element.offsetLeft / clientWidth);
-    var newScrollLeft = clientWidth * pageIndex;
-    //console.log("-> newScrollLeft = " + newScrollLeft);
-    scrollingElement.scrollLeft = newScrollLeft;
-    
-    return element;
+    element.scrollIntoView();
 }
 
 function bodyOrHtml() {
