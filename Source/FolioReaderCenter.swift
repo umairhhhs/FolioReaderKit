@@ -790,7 +790,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     
-    
     open func changePageWith(reference: FRTocReference, searchResult: SearchResult, animated: Bool = false) {
         
         let item = findPageByResource(reference)

@@ -132,24 +132,26 @@ open class FolioReaderWebView: UIWebView {
 
     @objc func addHighlight(_ sender: UIMenuController?) -> Highlight? {
         let highlightAndReturn = js("highlightString('\(HighlightStyle.classForStyle(self.folioReader.currentHighlightStyle))')")
-        let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8)
-        
+        guard let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8) else {
+            return nil
+        }
         do {
-            let json = try JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSArray
-            let dic = json.firstObject as! [String: String]
-            let rect = CGRectFromString(dic["rect"]!)
-            
+            guard let json = try JSONSerialization.jsonObject(with: jsonData, options: []) as? NSArray,
+                let dic = json.firstObject as? [String: String]
+            else {
+                return nil
+            }
             guard let rangies = dic["rangy"] else {
                 return nil
             }
-            
             guard let text = dic["content"] else {
                 return nil
             }
-            
-            createMenu(options: true)
-            setMenuVisible(true, andRect: rect)
-            
+            if let dicRect = dic["rect"] {
+                let rect = CGRectFromString(dicRect)
+                createMenu(options: true)
+                setMenuVisible(true, andRect: rect)
+            }
             // Persist
             guard
                 let identifier = dic["id"],
@@ -161,7 +163,18 @@ open class FolioReaderWebView: UIWebView {
             let rangeString = getRangy(rangies, with: identifier)
             
             let pageNumber = folioReader.readerCenter?.currentPageNumber ?? 0
-            let match = Highlight.MatchingHighlight(text: text, id: identifier, bookId: bookId, currentPage: pageNumber, rangy:  rangeString)
+            let migrationPageNumber = max(0, pageNumber - 1)
+            // New id
+            var rangy = rangeString
+            rangy = rangy.replacingOccurrences(of: "type:textContent|", with: "")
+            let elements = rangy.split(separator: "$")
+            var newId = identifier
+            if elements.count >= 2 {
+                newId = bookId + "_" + String(pageNumber) + "_"
+                newId += elements[0] + "_"
+                newId += elements[1] + "_" + String(elements.last ?? "")
+            }
+            let match = Highlight.MatchingHighlight(text: text, id: newId, bookId: bookId, currentPage: migrationPageNumber, rangy:  rangeString)
             let highlight = Highlight.matchHighlight(match)
             return highlight
             

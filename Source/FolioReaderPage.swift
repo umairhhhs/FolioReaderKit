@@ -41,7 +41,11 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     weak var readerContainer: FolioReaderContainer?
 
     /// The index of the current page. Note: The index start at 1!
-    open var pageNumber: Int!
+    open var pageNumber: Int! {
+        didSet {
+            print("pageNumber \(String(describing: pageNumber))")
+        }
+    }
     open var webView: FolioReaderWebView?
 
     fileprivate var colorView: UIView!
@@ -111,8 +115,10 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     
     open override func prepareForReuse() {
         super.prepareForReuse()
-        webView?.stopLoading()
-        webView?.loadHTMLString("", baseURL: nil)
+        webView?.alpha = 0
+        if let blank =  URL.init(string: "about:blank") {
+            webView?.loadRequest(URLRequest.init(url:blank))
+        }
     }
     
     // IID
