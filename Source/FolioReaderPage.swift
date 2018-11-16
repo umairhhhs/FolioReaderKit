@@ -40,8 +40,12 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     weak var delegate: FolioReaderPageDelegate?
     weak var readerContainer: FolioReaderContainer?
 
-    /// The index of the current page. Note: The index start at 1!
-    open var pageNumber: Int!
+    /// The index of the current page. Note: The index start at 0!
+    open var pageNumber: Int! {
+        didSet {
+            print("pageNumber \(String(describing: pageNumber))")
+        }
+    }
     open var webView: FolioReaderWebView?
 
     fileprivate var colorView: UIView!
@@ -111,8 +115,10 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     
     open override func prepareForReuse() {
         super.prepareForReuse()
-        webView?.stopLoading()
-        webView?.loadHTMLString("", baseURL: nil)
+        webView?.alpha = 0
+        if let blank =  URL.init(string: "about:blank") {
+            webView?.loadRequest(URLRequest.init(url:blank))
+        }
     }
     
     // IID
@@ -333,7 +339,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                 }
 
                 let href = splitedPath[1].trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-                let hrefPage = (self.folioReader.readerCenter?.findPageByHref(href) ?? 0) + 1
+                let hrefPage = (self.folioReader.readerCenter?.findPageByHref(href) ?? 0)
                 
                 // IID handle click on non linear item like a image. Show a zoomable single page
                 // check if FRResource in FRSpine in non linear

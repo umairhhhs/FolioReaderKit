@@ -74,7 +74,11 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     var pageScrollDirection = ScrollDirection()
     var nextPageNumber: Int = 0
     var previousPageNumber: Int = 0
-    var currentPageNumber: Int = 0
+    var currentPageNumber: Int = 0 {
+        didSet {
+            print("currentPageNumber \(currentPageNumber)")
+        }
+    }
     var pageWidth: CGFloat = 0.0
     var pageHeight: CGFloat = 0.0
     
@@ -340,7 +344,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
         if self.readerConfig.loadSavedPositionForCurrentBook {
             guard let position = folioReader.savedPositionForCurrentBook, let pageNumber = position["pageNumber"] as? Int, pageNumber > 0 else {
-                self.currentPageNumber = 1
+                self.currentPageNumber = 0
                 return
             }
 
@@ -484,7 +488,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         }
 
         cell.setup(withReaderContainer: readerContainer)
-        cell.pageNumber = indexPath.row+1
+        cell.pageNumber = indexPath.row
         cell.webView?.scrollView.delegate = self
         if #available(iOS 11.0, *) {
             cell.webView?.scrollView.contentInsetAdjustmentBehavior = .never
@@ -647,8 +651,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             return
         }
 
-        self.collectionView.scrollToItem(at: IndexPath(row: self.currentPageNumber - 1, section: 0), at: UICollectionViewScrollPosition(), animated: false)
-        if (self.currentPageNumber + 1) >= totalPages {
+        self.collectionView.scrollToItem(at: IndexPath(row: self.currentPageNumber, section: 0), at: UICollectionViewScrollPosition(), animated: false)
+        if (self.currentPageNumber + 1) >= totalPages - 1 {
             UIView.animate(withDuration: duration, animations: {
                 self.collectionView.setContentOffset(self.frameForPage(self.currentPageNumber).origin, animated: false)
             })
@@ -687,11 +691,11 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             let currentIndexPath = getCurrentIndexPath()
             currentPage = collectionView.cellForItem(at: currentIndexPath) as? FolioReaderPage
 
-            self.previousPageNumber = currentIndexPath.row
-            self.currentPageNumber = currentIndexPath.row+1
+            self.previousPageNumber = currentIndexPath.row - 1
+            self.currentPageNumber = currentIndexPath.row
         }
 
-        self.nextPageNumber = (((self.currentPageNumber + 1) <= totalPages) ? (self.currentPageNumber + 1) : self.currentPageNumber)
+        self.nextPageNumber = (((self.currentPageNumber + 1) <= totalPages - 1) ? (self.currentPageNumber + 1) : self.currentPageNumber)
 
         // Set pages
         guard let currentPage = currentPage else {
@@ -767,9 +771,9 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
     func frameForPage(_ page: Int) -> CGRect {
         return self.readerConfig.isDirection(
-            CGRect(x: 0, y: self.pageHeight * CGFloat(page-1), width: self.pageWidth, height: self.pageHeight),
-            CGRect(x: self.pageWidth * CGFloat(page-1), y: 0, width: self.pageWidth, height: self.pageHeight),
-            CGRect(x: 0, y: self.pageHeight * CGFloat(page-1), width: self.pageWidth, height: self.pageHeight)
+            CGRect(x: 0, y: self.pageHeight * CGFloat(page), width: self.pageWidth, height: self.pageHeight),
+            CGRect(x: self.pageWidth * CGFloat(page), y: 0, width: self.pageWidth, height: self.pageHeight),
+            CGRect(x: 0, y: self.pageHeight * CGFloat(page), width: self.pageWidth, height: self.pageHeight)
         )
     }
 
@@ -790,7 +794,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     
-    
     open func changePageWith(reference: FRTocReference, searchResult: SearchResult, animated: Bool = false) {
         
         let item = findPageByResource(reference)
@@ -799,7 +802,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             return
         }
         // Scroll to a result in current page
-        if self.currentPageNumber - 1 == item, item >= 0 {
+        if self.currentPageNumber == item, item >= 0 {
             currentPage?.scrollTo(searchResult: searchResult, animated: true)
             return
         }
@@ -826,7 +829,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         guard let currentPage = currentPage else { return }
 
         let item = findPageByHref(href)
-        let pageUpdateNeeded = item+1 != currentPage.pageNumber
+        let pageUpdateNeeded = (item != currentPage.pageNumber)
         let indexPath = IndexPath(row: item, section: 0)
         changePageWith(indexPath: indexPath, animated: true) { () -> Void in
             if pageUpdateNeeded {
@@ -1043,7 +1046,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             for item in items {
                 guard foundResource == nil else { break }
 
-                if let reference = book.spine.spineReferences[safe: (currentPageNumber - 1)], let resource = item.resource, resource == reference.resource {
+                if let reference = book.spine.spineReferences[safe: currentPageNumber], let resource = item.resource, resource == reference.resource {
                     foundResource = resource
                     break
                 } else if let children = item.children, children.isEmpty == false {
@@ -1076,7 +1079,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     public func getCurrentChapterName() -> String? {
         for item in self.book.flatTableOfContents {
             guard
-                let reference = self.book.spine.spineReferences[safe: (self.currentPageNumber - 1)],
+                let reference = self.book.spine.spineReferences[safe: self.currentPageNumber],
                 let resource = item.resource,
                 (resource == reference.resource),
                 let title = item.title else {
@@ -1099,8 +1102,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
      - parameter completion: A Closure which is called if the page change is completed.
      */
     public func changePageWith(page: Int, animated: Bool = false, completion: (() -> Void)? = nil) {
-        if page > 0 && page-1 < totalPages {
-            let indexPath = IndexPath(row: page-1, section: 0)
+        if page > 0 && page < totalPages {
+            let indexPath = IndexPath(row: page, section: 0)
             changePageWith(indexPath: indexPath, animated: animated, completion: { () -> Void in
                 self.updateCurrentPage {
                     completion?()
@@ -1279,7 +1282,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                 let webViewPage = pageForOffset(contentOffset, pageHeight: pageSize)
 
                 if (readerConfig.scrollDirection == .horizontalWithVerticalContent) {
-                    let currentIndexPathRow = (page.pageNumber - 1)
+                    let currentIndexPathRow = page.pageNumber + 0
 
                     // if the cell reload doesn't save the top position offset
                     if let oldOffSet = self.currentWebViewScrollPositions[currentIndexPathRow], (abs(oldOffSet.y - scrollView.contentOffset.y) > 100) {
@@ -1350,7 +1353,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         delay(0.2, closure: { [weak self] in
             if (self?.readerConfig.scrollDirection == .horizontalWithVerticalContent),
                 let cell = ((scrollView.superview as? UIWebView)?.delegate as? FolioReaderPage) {
-                let currentIndexPathRow = cell.pageNumber - 1
+                let currentIndexPathRow = cell.pageNumber + 0
                 self?.currentWebViewScrollPositions[currentIndexPathRow] = scrollView.contentOffset
             }
 

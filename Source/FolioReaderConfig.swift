@@ -169,7 +169,7 @@ open class FolioReaderConfig: NSObject {
     // MARK: Realm
 
     /// Realm configuration for storing highlights
-    open var realmConfiguration         = Realm.Configuration(schemaVersion: 3)
+    open var realmConfiguration: Realm.Configuration
 
     // MARK: Localized strings
 
@@ -219,10 +219,15 @@ open class FolioReaderConfig: NSObject {
     open var fileDelegate: FolioReaderConfigFileDelegate?
     //IID END
     
-    public convenience init(withIdentifier identifier: String) {
-        self.init()
-
+    public init(withIdentifier identifier: String, realmConfig: Realm.Configuration) {
         self.identifier = identifier
+        self.realmConfiguration = realmConfig
+        super.init()
+    }
+    
+    public override init() {
+        self.identifier = nil
+        self.realmConfiguration = Realm.Configuration.defaultConfiguration
     }
 
     /**
