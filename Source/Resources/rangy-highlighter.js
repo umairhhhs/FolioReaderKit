@@ -600,7 +600,7 @@
                         throw new Error("No class applier found for class '" + parts[3] + "'");
                     }
 
-                    highlight = new Highlight(this.doc, characterRange, classApplier, this.converter, parseInt(parts[2]), containerElementId);
+                    highlight = new Highlight(this.doc, characterRange, classApplier, this.converter, parts[2], containerElementId);
                     highlight.apply();
                     highlights.push(highlight);
                 }

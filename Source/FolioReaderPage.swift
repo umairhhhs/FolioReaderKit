@@ -252,7 +252,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         guard let bookId = (self.book.name as NSString?)?.deletingPathExtension else {
             return
         }
-        let highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId, andPage: pageNumber as NSNumber?)
+        let highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId, andPage: NSNumber(value: pageNumber - 1))
         let rangies = highlights.reduce("type:textContent") { (string, highlight) -> String in
             if let aRangy = highlight.rangy {
                 let range = aRangy.split(separator: "|").last
@@ -273,7 +273,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                         let rangyFull = String("type:textContent\(rangyPart)")
                         
                         //create new highlight
-                        let match = Highlight.MatchingHighlight(text: highlight.content!.stripHtml(), id: uuid, bookId: bookId, currentPage: highlight.page , rangy:  rangyFull)
+                        let migrationPageNumber = max(0, highlight.page - 1)
+                        let match = Highlight.MatchingHighlight(text: highlight.content!.stripHtml(), id: uuid, bookId: bookId, currentPage: migrationPageNumber , rangy:  rangyFull)
                         let newHighlight = Highlight.matchHighlight(match)
                         newHighlight?.persist(withConfiguration: self.readerConfig)
                         //delete old highlight

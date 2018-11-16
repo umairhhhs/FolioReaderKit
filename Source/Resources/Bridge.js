@@ -168,7 +168,7 @@ function setFontSize(cls) {
 /*
  *	Native bridge Highlight text
  */
-function highlightString(style) {
+function highlightString(style, bookId, pageIndex) {
     
     var highlightSelection = highlighter.highlightSelection(style);
     newHighlights = highlightSelection;
@@ -177,7 +177,7 @@ function highlightString(style) {
     var range = window.getSelection().getRangeAt(0);
     var startOffset = range.startOffset;
     var endOffset = range.endOffset;
-    var id = guid();
+    var id = bookId + "_" + pageIndex.toString() + "_" + aNewHighlight.characterRange.start.toString() + "_" + aNewHighlight.characterRange.end.toString()
     aNewHighlight.id = id
     var text = window.getSelection().toString();
     var params = [];
@@ -186,6 +186,7 @@ function highlightString(style) {
     return JSON.stringify(params);
 }
 
+// Deprecated
 function highlightStringWithNote(style) {
     var range = window.getSelection().getRangeAt(0);
     var startOffset = range.startOffset;
@@ -350,7 +351,7 @@ var getHighlightById = function (highlightId) {
     var highlight;
     for ( var i in highlighter.highlights ) {
         var aHighlight = highlighter.highlights[i];
-        if (parseInt(highlightId) === parseInt(aHighlight.id)) {
+        if (highlightId === aHighlight.id) {
             highlight = aHighlight;
         }
     }

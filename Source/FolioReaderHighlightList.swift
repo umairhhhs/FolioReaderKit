@@ -180,7 +180,7 @@ class FolioReaderHighlightList: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let highlight = highlights[safe: indexPath.row] else { return }
 
-        self.folioReader.readerCenter?.changePageWith(page: highlight.page, andFragment: highlight.highlightId ?? "")
+        self.folioReader.readerCenter?.changePageWith(page: highlight.page + 1, andFragment: highlight.highlightId ?? "")
         self.dismiss()
     }
 
