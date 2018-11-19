@@ -154,15 +154,16 @@ extension Highlight {
     ///   - highlightId: The ID to be removed
     ///   - page: Page number
     /// - Returns: Return a Highlight
-    public static func getById(withConfiguration readerConfig: FolioReaderConfig, highlightId: String) -> Highlight {
+    public static func getById(withConfiguration readerConfig: FolioReaderConfig, highlightId: String) -> Highlight? {
         var highlight: Highlight?
         let predicate = NSPredicate(format:"highlightId = %@", highlightId)
         do {
-            let realm = try! Realm(configuration: readerConfig.realmConfiguration)
+            let realm = try Realm(configuration: readerConfig.realmConfiguration)
             highlight = realm.objects(Highlight.self).filter(predicate).toArray(Highlight.self).first
-            return highlight!
+            return highlight
         } catch let error as NSError {
             print("Error getting Highlight : \(error)")
+            return nil
         }
     }
 
@@ -217,9 +218,9 @@ extension Highlight {
     /// - Returns: Return a list of Highlights
     public static func allByBookId(withConfiguration readerConfig: FolioReaderConfig, bookId: String, andPage page: NSNumber? = nil) -> [Highlight] {
         var highlights: [Highlight]?
-        var predicate = NSPredicate(format: "bookId = %@", bookId)
+        var predicate = NSPredicate(format: "bookId = %@ && isDeleted = false", bookId)
         if let page = page {
-            predicate = NSPredicate(format: "bookId = %@ && page = %@", bookId, page)
+            predicate = NSPredicate(format: "bookId = %@ && page = %@ && isDeleted = false", bookId, page)
         }
 
         do {
