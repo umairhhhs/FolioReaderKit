@@ -171,12 +171,12 @@ open class FolioReaderWebView: UIWebView {
             rangy = rangy.replacingOccurrences(of: "type:textContent|", with: "")
             let elements = rangy.split(separator: "$")
             var newId = identifier
-            if elements.count >= 1 {
+            if elements.count >= 2 {
                 newId = bookId + "_" + String(migrationPageNumber) + "_"
                 newId += elements[0] + "_"
                 newId += elements[1]
             }
-            if elements.count >= 2 {
+            if elements.count >= 3 {
                 var newRangeString = rangeString.split(separator: "$")
                 newRangeString[2] = Substring.init(newId)
                 rangeString = newRangeString.joined(separator: "$")
@@ -195,13 +195,12 @@ open class FolioReaderWebView: UIWebView {
     @objc func highlight(_ sender: UIMenuController?) {
         let highlight = addHighlight(sender)
         highlight?.persist(withConfiguration: self.readerConfig)
-
     }
     
     func getRangy(_ rangies: String, with identifier: String) -> String {
         var rangylist = rangies.split(separator: "|")
         rangylist.remove(at: 0)
-        var range = rangylist.filter { (aRangy) -> Bool in
+        let range = rangylist.filter { (aRangy) -> Bool in
             aRangy.split(separator: "$")[2] == identifier
             }.first
         let rangeString = String("type:textContent|\(range!)")

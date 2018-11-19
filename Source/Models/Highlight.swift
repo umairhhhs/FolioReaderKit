@@ -26,6 +26,10 @@ open class Highlight: Object {
     @objc open dynamic var serverId: Int = -1
     @objc open dynamic var accountId: Int = -1
     @objc open dynamic var filePath: String?
+    @objc open dynamic var isSynced: Bool = false
+    @objc open dynamic var numOfTry: Int = 0
+    @objc open dynamic var isDeleted: Bool = false
+    @objc open dynamic var title: String?
 
     override open class func primaryKey()-> String {
         return "highlightId"

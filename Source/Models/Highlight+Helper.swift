@@ -99,28 +99,29 @@ extension Highlight {
         }
     }
 
-    public func addRangy(withConfiguration readerConfig: FolioReaderConfig, id: String, rangy: String) {
-        do {
-            let realm = try Realm(configuration: readerConfig.realmConfiguration)
-            realm.beginWrite()
-            self.rangy = rangy
-            self.highlightId = id
-            try realm.commitWrite()
-        } catch let error as NSError {
-            print("Error on persist highlight: \(error)")
-        }
-    }
+//    public func addRangy(withConfiguration readerConfig: FolioReaderConfig, id: String, rangy: String) {
+//        do {
+//            let realm = try Realm(configuration: readerConfig.realmConfiguration)
+//            realm.beginWrite()
+//            self.rangy = rangy
+//            self.highlightId = id
+//            try realm.commitWrite()
+//        } catch let error as NSError {
+//            print("Error on persist highlight: \(error)")
+//        }
+//    }
     
-    /// Remove a Highlight
+    /// Remove a Highlight. Don't really delete it. Just mark is as deleted
     ///
     /// - Parameter readerConfig: Current folio reader configuration.
     public func remove(withConfiguration readerConfig: FolioReaderConfig) {
+        guard let realm = try? Realm(configuration: readerConfig.realmConfiguration) else {
+            return
+        }
         do {
-            guard let realm = try? Realm(configuration: readerConfig.realmConfiguration) else {
-                return
-            }
             try realm.write {
-                realm.delete(self)
+                self.isSynced = false
+                self.isDeleted = true
                 try realm.commitWrite()
             }
         } catch let error as NSError {
@@ -128,7 +129,7 @@ extension Highlight {
         }
     }
 
-    /// Remove a Highlight by ID
+    /// Remove a Highlight by ID. Don't really delete it. Just mark is as deleted
     ///
     /// - Parameters:
     ///   - readerConfig: Current folio reader configuration.
@@ -179,7 +180,7 @@ extension Highlight {
             let realm = try Realm(configuration: readerConfig.realmConfiguration)
             highlight = realm.objects(Highlight.self).filter(predicate).toArray(Highlight.self).first
             realm.beginWrite()
-
+            highlight?.isSynced = false
             highlight?.rangy = rangy
             highlight?.type = styleForClass(forRangy: rangy)
             try realm.commitWrite()
@@ -188,6 +189,23 @@ extension Highlight {
             print("Error on updateById: \(error)")
         }
 
+    }
+    
+    /// Update a Highlight
+    public func update(note: String, withConfiguration readerConfig: FolioReaderConfig) {
+        guard let realm = try? Realm(configuration: readerConfig.realmConfiguration) else {
+            return
+        }
+        do {
+            try realm.write {
+                self.noteForHighlight = note
+                self.isSynced = false
+                try realm.commitWrite()
+            }
+        } catch let error as NSError {
+            print("Error on update: \(error)")
+        }
+        
     }
 
     /// Return a list of Highlights with a given ID

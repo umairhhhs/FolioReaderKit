@@ -1073,3 +1073,12 @@ function bodyOrHtml() {
     return document.documentElement;
 }
 
+function scrollToSelection( sel ) {
+    var node = document.createElement("span");
+    sel.surroundContents(node);
+    var scrollDist = node.offsetTop
+    - (window.innerHeight+node.offsetHeight)/2;
+    if ( scrollDist > 0 )
+        window.scrollBy(0,scrollDist);
+}
+
