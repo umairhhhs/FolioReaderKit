@@ -216,7 +216,7 @@ extension Highlight {
     ///   - bookId: Book ID
     ///   - page: Page number
     /// - Returns: Return a list of Highlights
-    public static func allByBookId(withConfiguration readerConfig: FolioReaderConfig, bookId: String, andPage page: NSNumber? = nil) -> [Highlight] {
+    public static func allByBookId(withConfiguration readerConfig: FolioReaderConfig, bookId: String, andPage page: NSNumber? = nil, sortBy: String? = nil, ascending: Bool = true) -> [Highlight] {
         var highlights: [Highlight]?
         var predicate = NSPredicate(format: "bookId = %@ && isDeleted = false", bookId)
         if let page = page {
@@ -225,7 +225,11 @@ extension Highlight {
 
         do {
             let realm = try Realm(configuration: readerConfig.realmConfiguration)
-            highlights = realm.objects(Highlight.self).filter(predicate).toArray(Highlight.self)
+            if let mSortBy = sortBy {
+                highlights = realm.objects(Highlight.self).filter(predicate).sorted(byKeyPath: mSortBy, ascending: ascending).toArray(Highlight.self)
+            } else {
+                highlights = realm.objects(Highlight.self).filter(predicate).toArray(Highlight.self)
+            }
             return (highlights ?? [])
         } catch let error as NSError {
             print("Error on fetch all by book Id: \(error)")
