@@ -18,10 +18,43 @@ public enum HighlightStyle: Int {
     case blue
     case pink
     case underline
+    
+    var name: String {
+        switch self {
+        case .yellow: return "yellow"
+        case .green: return "green"
+        case .blue: return "blue"
+        case .pink: return "pink"
+        case .underline: return "underline"
+        }
+    }
 
     public init () {
         // Default style is `.yellow`
         self = .yellow
+    }
+    
+    public static func name(from value: Int) -> String {
+        guard let style = HighlightStyle.init(rawValue: value) else {
+            return HighlightStyle.yellow.name
+        }
+        return style.name
+    }
+    
+    public static func style(from string: String) -> HighlightStyle {
+        if string == HighlightStyle.green.name {
+            return .green
+        }
+        if string == HighlightStyle.blue.name {
+            return .blue
+        }
+        if string == HighlightStyle.pink.name {
+            return .pink
+        }
+        if string == HighlightStyle.underline.name {
+            return .underline
+        }
+        return .yellow
     }
 
     /**
