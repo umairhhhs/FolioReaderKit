@@ -42,16 +42,16 @@ public enum HighlightStyle: Int {
     }
     
     public static func style(from string: String) -> HighlightStyle {
-        if string == HighlightStyle.green.name {
+        if string.contains(HighlightStyle.green.name) {
             return .green
         }
-        if string == HighlightStyle.blue.name {
+        if string.contains(HighlightStyle.blue.name) {
             return .blue
         }
-        if string == HighlightStyle.pink.name {
+        if string.contains(HighlightStyle.pink.name) {
             return .pink
         }
-        if string == HighlightStyle.underline.name {
+        if string.contains(HighlightStyle.underline.name) {
             return .underline
         }
         return .yellow
