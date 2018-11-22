@@ -47,6 +47,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         }
     }
     open var webView: FolioReaderWebView?
+    open var resource: FRResource?
 
     fileprivate var colorView: UIView!
     fileprivate var shouldShowBar = true
@@ -513,16 +514,20 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     }
     // IID
    
-    open func scrollTo(_ highlightId: String, animated: Bool) {
+    open func scrollTo(_ highlightId: String, animated: Bool, verticalInset: Bool = true) {
         if !highlightId.isEmpty {
-            let offset = getHighlightOffset(highlightId)
+            var offset = getHighlightOffset(highlightId)
+            if verticalInset &&
+                self.readerConfig.scrollDirection.collectionViewScrollDirection() == UICollectionViewScrollDirection.vertical {
+                offset = offset - 100
+            }
             scrollPageToOffset(offset, animated: animated)
         }
     }
     
     func getHighlightOffset(_ highlightId: String) -> CGFloat {
         let horizontal = self.readerConfig.scrollDirection == .horizontal
-        let function = "getHighlightOffset('\(highlightId)', '\(horizontal.description)')"
+        let function = "getHighlightOffset('\(highlightId)', \(horizontal))"
         if let strOffset = webView?.js(function) {
             return CGFloat((strOffset as NSString).floatValue)
         }

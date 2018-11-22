@@ -164,11 +164,11 @@ open class FolioReaderWebView: UIWebView {
             }
             // MARK: Move to method
             // get matching rang
-            var rangeString = getRangy(rangies, with: identifier)
+            var rangeString = FolioUtils.getRangy(rangies, with: identifier)
             
             // New id - migration to sync highlight
             var rangy = rangeString
-            rangy = rangy.replacingOccurrences(of: "type:textContent|", with: "")
+            rangy = rangy.replacingOccurrences(of: Highlight.typeTextContentWithLine, with: "")
             let elements = rangy.split(separator: "$")
             var newId = identifier
             if elements.count >= 2 {
@@ -197,15 +197,7 @@ open class FolioReaderWebView: UIWebView {
         highlight?.persist(withConfiguration: self.readerConfig)
     }
     
-    func getRangy(_ rangies: String, with identifier: String) -> String {
-        var rangylist = rangies.split(separator: "|")
-        rangylist.remove(at: 0)
-        let range = rangylist.filter { (aRangy) -> Bool in
-            aRangy.split(separator: "$")[2] == identifier
-            }.first
-        let rangeString = String("type:textContent|\(range!)")
-        return rangeString
-    }
+    
     
     @objc func highlightWithNote(_ sender: UIMenuController?) {
         if let highlight = addHighlight(sender) {
@@ -265,7 +257,7 @@ open class FolioReaderWebView: UIWebView {
 
         if let updateId = js("setHighlightStyle('\(HighlightStyle.classForStyle(style.rawValue))')") {
             if let rangies = js("getHighlights()") {
-                let rangeString = getRangy(rangies, with: updateId)
+                let rangeString = FolioUtils.getRangy(rangies, with: updateId)
                 Highlight.updateById(withConfiguration: self.readerConfig, highlightId: updateId, rangy: rangeString)
             }
         }

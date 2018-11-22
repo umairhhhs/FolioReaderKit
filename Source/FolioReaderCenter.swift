@@ -56,6 +56,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     open var collectionView: UICollectionView!
     
     open var rwBook: FolioRWBook?
+    var lastReadRangy: String?
     
     let collectionViewLayout = UICollectionViewFlowLayout()
     var loadingView: UIActivityIndicatorView!
@@ -339,11 +340,17 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         self.setCollectionViewProgressiveDirection()
 
         if self.readerConfig.loadSavedPositionForCurrentBook {
-            guard let position = folioReader.savedPositionForCurrentBook, let pageNumber = position["pageNumber"] as? Int, pageNumber > 0 else {
+            guard let lastRead = FolioLastRead.lastRead(from: self.rwBook?.id ?? 0),
+                lastRead.page >= 0
+            else {
                 self.currentPageNumber = 1
                 return
             }
-
+            let pageNumber = lastRead.page + 1
+//            guard let position = folioReader.savedPositionForCurrentBook, let pageNumber = position["pageNumber"] as? Int, pageNumber > 0 else {
+//                self.currentPageNumber = 1
+//                return
+//            }
             self.changePageWith(page: pageNumber)
             self.currentPageNumber = pageNumber
         }
@@ -495,10 +502,11 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         cell.backgroundColor = .clear
 
         setPageProgressiveDirection(cell)
-        guard  book.spine.spineReferences.count > indexPath.row else {
+        guard book.spine.spineReferences.count > indexPath.row else {
             return cell
         }
         let resource = self.book.spine.spineReferences[indexPath.row].resource
+        cell.resource = resource
         DispatchQueue.global(qos: .default).async {
             String.load(contentsOfFile: resource.fullHref, encoding: String.Encoding.utf8, config: self.readerConfig, completion: { (content, error) in
                 DispatchQueue.global(qos: .default).async {
@@ -1367,23 +1375,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             }
         })
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0) {            
-//            guard let offsetX = self.currentPage?.webView?.scrollView.contentOffset.x else {
-//                return
-//            }
-//            self.currentPage?.webView?.js("createSelectionFromPoint(\(0), 1, \(0 + 200), 200)")
-//            let highlightAndReturn = self.currentPage?.webView?.js("highlightString('\(HighlightStyle.classForStyle(self.folioReader.currentHighlightStyle))')")
-//            guard let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8) else {
-//                return
-//            }
-//
-//            do {
-//                let json = try JSONSerialization.jsonObject(with: jsonData, options: []) as! NSArray
-//                let dic = json.firstObject as! [String: String]
-//
-//            } catch {
-//                print("Could not receive JSON")
-//            }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0) {
         }
     }
 
@@ -1416,7 +1408,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
      Present chapter list
      */
     @objc func presentChapterList(_ sender: UIBarButtonItem) {
-        folioReader.saveReaderState()
+//        folioReader.saveReaderState()
 
         let chapter = FolioReaderChapterList(folioReader: folioReader, readerConfig: readerConfig, book: book, delegate: self)
         let highlight = FolioReaderHighlightList(folioReader: folioReader, readerConfig: readerConfig)
@@ -1434,7 +1426,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
      Present fonts and settings menu
      */
     @objc func presentFontsMenu() {
-        folioReader.saveReaderState()
+//        folioReader.saveReaderState()
         hideBars()
 
         let menu = FolioReaderFontsMenu(folioReader: folioReader, readerConfig: readerConfig)
@@ -1456,7 +1448,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
      Present audio player menu
      */
     @objc func presentPlayerMenu(_ sender: UIBarButtonItem) {
-        folioReader.saveReaderState()
+//        folioReader.saveReaderState()
         hideBars()
 
         let menu = FolioReaderPlayerMenu(folioReader: folioReader, readerConfig: readerConfig)
@@ -1519,19 +1511,30 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 // MARK: FolioPageDelegate
 
 extension FolioReaderCenter: FolioReaderPageDelegate {
-
+    // Util
+    private func scrollToLastReadPosition(page: FolioReaderPage, lastRead: FolioLastRead) {
+        if (lastRead.pageOffsetX > 0 || lastRead.pageOffsetY > 0),
+            self.folioReader.currentFontSize.rawValue == lastRead.fontSize,
+            self.readerConfig.scrollDirection.isVertical == lastRead.isVertical,
+            UIDevice.current.orientation.isLandscape == lastRead.isLandscape {
+            let pageOffset = self.readerConfig.isDirection(lastRead.pageOffsetY, lastRead.pageOffsetX, lastRead.pageOffsetY)
+            page.scrollPageToOffset(pageOffset, animated: false)
+        } else if let position = lastRead.position, !position.isEmpty {
+            if let rangyId = lastRead.rangyId {
+                page.webView?.js("setLastRead('\(position)')")
+                page.scrollTo(rangyId, animated: false, verticalInset: false)
+            }
+        }
+    }
+    
     public func pageDidLoad(_ page: FolioReaderPage) {
-        if self.readerConfig.loadSavedPositionForCurrentBook, let position = folioReader.savedPositionForCurrentBook {
-            let pageNumber = position["pageNumber"] as? Int
-            let offset = self.readerConfig.isDirection(position["pageOffsetY"], position["pageOffsetX"], position["pageOffsetY"]) as? CGFloat
-            let pageOffset = offset
-
+        if self.readerConfig.loadSavedPositionForCurrentBook {
             if isFirstLoad {
                 updateCurrentPage(page)
                 isFirstLoad = false
-
-                if (self.currentPageNumber == pageNumber && pageOffset > 0) {
-                    page.scrollPageToOffset(pageOffset!, animated: false)
+                if let lastRead = FolioLastRead.lastRead(from: self.readerContainer?.rwBook?.id ?? 0),
+                    (self.currentPageNumber == lastRead.page + 1) {
+                    scrollToLastReadPosition(page: page, lastRead: lastRead)
                 }
             } else if (self.isScrolling == false && folioReader.needsRTLChange == true) {
                 page.scrollPageToBottom()

@@ -11,6 +11,10 @@ import RealmSwift
 
 /// A Highlight object
 open class Highlight: Object {
+    
+    public static let typeTextContent: String = "type:textContent"
+    public static let typeTextContentWithLine: String = "type:textContent|"
+    
     @objc open dynamic var bookId: String?
     @objc open dynamic var content: String?
     @objc open dynamic var contentPost: String?

@@ -113,7 +113,7 @@ public enum HighlightStyle: Int {
 public typealias Completion = (_ error: NSError?) -> ()
 
 extension Highlight {
-
+    
     /// Save a Highlight with completion block
     ///
     /// - Parameters:

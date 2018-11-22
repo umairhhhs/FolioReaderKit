@@ -35,6 +35,9 @@ public enum FolioReaderScrollDirection: Int {
             return .horizontal
         }
     }
+    var isVertical: Bool {
+        return self == .vertical || self == .defaultVertical
+    }
 }
 
 // MARK: - ClassBasedOnClickListener

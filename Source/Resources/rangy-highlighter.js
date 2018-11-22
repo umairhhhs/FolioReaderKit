@@ -453,6 +453,26 @@
                     exclusive: options.exclusive
                 });
             },
+                       
+            serializeSelection: function(className) {
+                var converter = this.converter;
+                var classApplier = className ? this.classAppliers[className] : false;
+                var selection =  api.getSelection(this.doc);
+                var doc = selection.win.document;
+                var containerElement = getContainerElement(doc, null);
+                if (!classApplier && className !== false) {
+                    throw new Error("No class applier found for class '" + className + "'");
+                }
+                // Store the existing selection as character ranges
+                var serializedSelection = converter.serializeSelection(selection, containerElement);
+
+                // Create an array of selected character ranges
+                var selCharRanges = [];
+                forEach(serializedSelection, function(rangeInfo) {
+                    selCharRanges.push( CharacterRange.fromCharacterRange(rangeInfo.characterRange) );
+                });
+                return selCharRanges;
+            },
 
             highlightSelection: function(className, options) {
                 var converter = this.converter;

@@ -87,6 +87,16 @@ function setupRangy() {
                                                          }
                                                          }));
     
+    highlighter.addClassApplier(rangy.createClassApplier("last-read", {
+                                                         ignoreWhiteSpace: true,
+                                                         tagNames: ["span", "a"],
+                                                         elementProperties: {
+                                                             href: "#",
+                                                             onclick: function() {
+                                                         }
+                                                         }
+                                                         }));
+    
 };
 
 
@@ -186,6 +196,21 @@ function highlightString(style, bookId, pageIndex) {
     return JSON.stringify(params);
 }
 
+function getHighlightSerialization(style) {
+    var serialized = highlighter.serializeSelection(style);
+    var parts = [
+                 serialized[0].start,
+                 serialized[0].end,
+                 guid(),
+                 style
+                 ];
+    var params = [];
+    params.push({ rangy: parts.join("$") });
+    clearSelection();
+    return JSON.stringify(params);
+}
+
+
 // Deprecated
 function highlightStringWithNote(style) {
     var range = window.getSelection().getRangeAt(0);
@@ -213,6 +238,10 @@ function highlightStringWithNote(style) {
 
 function setHighlight( serializedHighlight ) {
     highlighter.deserialize(serializedHighlight);
+}
+
+function setLastRead( serializedLastRead ) {
+    highlighter.deserialize(serializedLastRead);
 }
 
 function getHighlights() {
