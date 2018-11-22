@@ -62,6 +62,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     var pages: [String]!
     var totalPages: Int = 0
     var tempFragment: String?
+    var tempAnchor: String?
     var animator: ZFModalTransitionAnimator!
     var pageIndicatorView: FolioReaderPageIndicator?
     var pageIndicatorHeight: CGFloat = 20
@@ -1460,10 +1461,18 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
 
         // Go to fragment if needed
         if let fragmentID = tempFragment, let currentPage = currentPage , fragmentID != "" {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 // your code here
                 currentPage.scrollTo(fragmentID, animated: true)
                 self.tempFragment = nil
+            }
+        }
+        
+        // Go to anchor if needed
+        if let anchor = tempAnchor, let currentPage = currentPage, !anchor.isEmpty {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0) {
+                currentPage.handleAnchor(anchor, avoidBeginningAnchors: false, animated: true)
+                self.tempAnchor = nil
             }
         }
         
