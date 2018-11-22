@@ -554,7 +554,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
      */
     func getAnchorOffset(_ anchor: String) -> CGFloat {
         let horizontal = self.readerConfig.scrollDirection == .horizontal
-        if let strOffset = webView?.js("getAnchorOffset('\(anchor)', \(horizontal.description))") {
+        if let strOffset = webView?.js("getAnchorOffset('\(anchor)', \(horizontal))") {
             return CGFloat((strOffset as NSString).floatValue)
         }
 

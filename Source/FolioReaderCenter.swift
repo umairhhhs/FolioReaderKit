@@ -51,7 +51,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
     /// The current visible page on reader
     open fileprivate(set) var currentPage: FolioReaderPage?
-
+    
     /// The collection view with pages
     open var collectionView: UICollectionView!
     
@@ -1461,7 +1461,7 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
 
         // Go to fragment if needed
         if let fragmentID = tempFragment, let currentPage = currentPage , fragmentID != "" {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                 // your code here
                 currentPage.scrollTo(fragmentID, animated: true)
                 self.tempFragment = nil
@@ -1469,9 +1469,10 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         }
         
         // Go to anchor if needed
-        if let anchor = tempAnchor, let currentPage = currentPage, !anchor.isEmpty {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0) {
-                currentPage.handleAnchor(anchor, avoidBeginningAnchors: false, animated: true)
+        // Fix RE-763
+        if let anchor = tempAnchor, !anchor.isEmpty {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                self.currentPage?.handleAnchor(anchor, avoidBeginningAnchors: false, animated: true)
                 self.tempAnchor = nil
             }
         }
