@@ -111,8 +111,10 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     
     open override func prepareForReuse() {
         super.prepareForReuse()
-        webView?.stopLoading()
-        webView?.loadHTMLString("", baseURL: nil)
+        webView?.alpha = 0
+        if let blank =  URL.init(string: "about:blank") {
+            webView?.loadRequest(URLRequest.init(url:blank))
+        }
     }
     
     // IID
@@ -337,11 +339,12 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                 
                 if (hrefPage == pageNumber) {
                     // Handle internal #anchor
-                    if anchorFromURL != nil {
-                        handleAnchor(anchorFromURL!, avoidBeginningAnchors: false, animated: true)
+                    if let anchor = anchorFromURL {
+                        handleAnchor(anchor, avoidBeginningAnchors: false, animated: true)
                         return false
                     }
                 } else {
+                    self.folioReader.readerCenter?.tempAnchor = anchorFromURL
                     self.folioReader.readerCenter?.changePageWith(href: href, animated: true)
                 }
                 return false
@@ -504,7 +507,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     
     func getHighlightOffset(_ highlightId: String) -> CGFloat {
         let horizontal = self.readerConfig.scrollDirection == .horizontal
-        let function = "getHighlightOffset('\(highlightId)', '\(horizontal.description)')"
+        let function = "getHighlightOffset('\(highlightId)', \(horizontal))"
         if let strOffset = webView?.js(function) {
             return CGFloat((strOffset as NSString).floatValue)
         }
@@ -551,7 +554,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
      */
     func getAnchorOffset(_ anchor: String) -> CGFloat {
         let horizontal = self.readerConfig.scrollDirection == .horizontal
-        if let strOffset = webView?.js("getAnchorOffset('\(anchor)', \(horizontal.description))") {
+        if let strOffset = webView?.js("getAnchorOffset('\(anchor)', \(horizontal))") {
             return CGFloat((strOffset as NSString).floatValue)
         }
 
