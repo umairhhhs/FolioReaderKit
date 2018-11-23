@@ -355,7 +355,7 @@ extension FolioReader {
         else {
             return
         }
-        let rangy = Highlight.typeTextContentWithLine + rangyString
+        let rangy = FolioUtils.makeRangyValidIfNeeded(rangy: Highlight.typeTextContentWithLine + rangyString)
         do {
             let realm = try Realm()
             realm.beginWrite()

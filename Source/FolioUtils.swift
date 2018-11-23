@@ -35,4 +35,20 @@ class FolioUtils {
         }
         return mRangy.split(separator: "$")[0] != mRangy.split(separator: "$")[1]
     }
+    
+    static func makeRangyValidIfNeeded(rangy: String) -> String {
+        if self.rangyIsValid(rangy: rangy) {
+            return rangy
+        }
+        var mRangy = rangy
+        if rangy.contains("type:textContent|") {
+            mRangy = String(rangy.split(separator: "|").last ?? "")
+        }
+        var parts = mRangy.split(separator: "$")
+        guard parts.count >= 2, let rangeEnd = Int(parts[1]) else {
+            return mRangy
+        }
+        parts[2] = Substring(String(rangeEnd + 1))
+        return Highlight.typeTextContentWithLine + parts.joined(separator: "$")
+    }
 }

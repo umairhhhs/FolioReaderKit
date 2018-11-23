@@ -1512,18 +1512,37 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
 extension FolioReaderCenter: FolioReaderPageDelegate {
     // Util
-    private func scrollToLastReadPosition(page: FolioReaderPage, lastRead: FolioLastRead) {
+    private func shouldScrollToLastReadByLocalOffset(lastRead: FolioLastRead) -> Bool {
         if (lastRead.pageOffsetX > 0 || lastRead.pageOffsetY > 0),
             self.folioReader.currentFontSize.rawValue == lastRead.fontSize,
             self.readerConfig.scrollDirection.isVertical == lastRead.isVertical,
-            UIDevice.current.orientation.isLandscape == lastRead.isLandscape {
+            UIDevice.current.orientation.isLandscape == lastRead.isLandscape  {
+            return true
+        }
+        return false
+    }
+    
+    private func scrollToLastReadPosition(page: FolioReaderPage, lastRead: FolioLastRead) {
+        // should scroll to last offset if user don't change font size, orientation
+        // and scroll direction
+        if shouldScrollToLastReadByLocalOffset(lastRead: lastRead) {
             let pageOffset = self.readerConfig.isDirection(lastRead.pageOffsetY, lastRead.pageOffsetX, lastRead.pageOffsetY)
             page.scrollPageToOffset(pageOffset, animated: false)
-        } else if let position = lastRead.position, !position.isEmpty {
+            return
+        }
+        // then check rangy
+        if let position = lastRead.position, !position.isEmpty {
             if let rangyId = lastRead.rangyId {
                 page.webView?.js("setLastRead('\(position)')")
                 page.scrollTo(rangyId, animated: false, verticalInset: false)
             }
+            return
+        }
+        // otherwise check pageOffsetX, pageOffsetY
+        if (lastRead.pageOffsetX > 0 || lastRead.pageOffsetY > 0) {
+            let pageOffset = self.readerConfig.isDirection(lastRead.pageOffsetY, lastRead.pageOffsetX, lastRead.pageOffsetY)
+            page.scrollPageToOffset(pageOffset, animated: false)
+            return
         }
     }
     
