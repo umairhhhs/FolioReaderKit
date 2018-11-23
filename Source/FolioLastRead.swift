@@ -10,8 +10,8 @@ import Foundation
 import RealmSwift
 
 class PageSize {
-    var width: CGFloat?
-    var height: CGFloat?
+    var width: CGFloat
+    var height: CGFloat
     
     init(width: CGFloat, height: CGFloat) {
         self.width = width
