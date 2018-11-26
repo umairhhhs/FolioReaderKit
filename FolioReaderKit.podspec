@@ -38,6 +38,6 @@ Pod::Spec.new do |s|
   s.dependency 'JSQWebViewController', '6.0.0'
   s.dependency 'RealmSwift', '3.10.0'
   s.dependency 'SwiftSoup'
-
+  s.dependency 'SQLite.swift', '0.11.5'
 
 end
