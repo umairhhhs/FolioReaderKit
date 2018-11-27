@@ -51,7 +51,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
     /// The current visible page on reader
     open fileprivate(set) var currentPage: FolioReaderPage?
-
+    
     /// The collection view with pages
     open var collectionView: UICollectionView!
     
@@ -63,6 +63,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     var pages: [String]!
     var totalPages: Int = 0
     var tempFragment: String?
+    var tempAnchor: String?
     var animator: ZFModalTransitionAnimator!
     var pageIndicatorView: FolioReaderPageIndicator?
     var pageIndicatorHeight: CGFloat = 20
@@ -1373,8 +1374,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             }
         })
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0) {
-        }
     }
 
     open func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
@@ -1576,6 +1575,15 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
                 // your code here
                currentPage.scrollTo(searchResult: searchResult, animated: true)
                 self.tempSearchResult = nil
+            }
+        }
+        
+        // Go to anchor if needed
+        // Fix RE-763
+        if let anchor = tempAnchor, !anchor.isEmpty {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                self.currentPage?.handleAnchor(anchor, avoidBeginningAnchors: false, animated: true)
+                self.tempAnchor = nil
             }
         }
         
