@@ -148,7 +148,8 @@ class FolioReaderSearchView: UIViewController {
         else {
             return
         }
-        let sections = FolioSearcher().search(term: searchText, bookId: "4610") ?? []
+        // setup data
+        var sections = FolioSearcher().search(term: searchText, bookId: "4610") ?? []
         let spineRefs = self.folioReader.readerContainer?.book.spine.spineReferences ?? []
         for section in sections {
             guard let index = spineRefs.firstIndex(where: { $0.resource.href == section.fileName }) else {
@@ -159,7 +160,9 @@ class FolioReaderSearchView: UIViewController {
             section.pageIndex = index
             section.title = self.getChapterName(page: index) ?? ""
         }
+        sections = sections.sorted { $0.pageIndex < $1.pageIndex }
         
+        // begin search
         let pattern = "([a-zA-Z0-9]|.){0,2}\(searchText)([a-zA-Z0-9]|.){0,2}"
         let regex = RegExp(pattern)
         let maxIndex = min(sections.count, sectionIndex + 8)
@@ -178,14 +181,26 @@ class FolioReaderSearchView: UIViewController {
                     section.results = innerResults
                     
                     // Load html from file
+                    var start = CACurrentMediaTime()
                     let mHtml = String.loadSync(contentsOfFile: section.resource?.fullHref ?? "",
                                                 config: self.readerConfig)
-                    guard let document = try? SwiftSoup.parse(mHtml),
-                        let html = try? document.text(), !html.isEmpty
+                    let data = Data(mHtml.utf8)
+                    let attributedString = try? NSAttributedString(data: data, options: [.documentType: NSAttributedString.DocumentType.html], documentAttributes: nil)
+                    print("need \(CACurrentMediaTime() - start) to load html")
+                    start = CACurrentMediaTime()
+                    guard let html = attributedString?.string, !html.isEmpty
                     else {
 //                        checkPauseSearchingInGlobalLoopIfNeeded()
                         return
                     }
+
+//                    guard let document = try? SwiftSoup.parse(mHtml),
+//                        let html = try? document.text(), !html.isEmpty
+//                    else {
+////                        checkPauseSearchingInGlobalLoopIfNeeded()
+//                        return
+//                    }
+                    print("need \(CACurrentMediaTime() - start) to parse html")
                     if operation.isCancelled == true {
                         return
                     }
@@ -238,6 +253,7 @@ class FolioReaderSearchView: UIViewController {
                         if self.table.rowsCount == self.matchesStrArray.count {
                             return
                         }
+                        self.searchResults.sort { $0.pageIndex < $1.pageIndex }
                         self.table.reloadData()
                     }
                 }
@@ -475,14 +491,6 @@ extension FolioReaderSearchView: UITableViewDataSource {
             return 0
         }
         return searchResults[section].results.count
-    }
-    
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        guard searchResults.count > section else {
-            return nil
-        }
-//        return searchResults[section].tocReference?.title
-        return ""
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
