@@ -45,7 +45,6 @@ class FolioReaderSearchView: UIViewController {
     
     fileprivate var folioReader: FolioReader
     private var readerConfig: FolioReaderConfig
-//    private var searchResults: [SectionSearchResult] = []
     private var searchResults: [FolioSearchDBSectionResult] = []
     
     lazy var searchingOperationQueue: OperationQueue = {
