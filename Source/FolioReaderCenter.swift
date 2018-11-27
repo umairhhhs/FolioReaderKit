@@ -798,20 +798,18 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     
-    open func changePageWith(reference: FRTocReference, searchResult: SearchResult, animated: Bool = false) {
-        
-        let item = findPageByResource(reference)
-        guard item < totalPages else {
+    open func changePageWith(page: Int, searchResult: SearchResult, animated: Bool = false) {
+        guard page < totalPages else {
             print("Failed to load book because the requested resource is missing.")
             return
         }
         // Scroll to a result in current page
-        if self.currentPageNumber - 1 == item, item >= 0 {
+        if self.currentPageNumber - 1 == page, page >= 0 {
             currentPage?.scrollTo(searchResult: searchResult, animated: true)
             return
         }
         // Load page at index path and scroll to result
-        let indexPath = IndexPath(row: item, section: 0)
+        let indexPath = IndexPath(row: page, section: 0)
         changePageWith(indexPath: indexPath, animated: false, completion: { () -> Void in
             self.updateCurrentPage()
         })
@@ -1574,7 +1572,7 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         
         // Go to search result if needed
         if let searchResult = tempSearchResult, let currentPage = currentPage {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                 // your code here
                currentPage.scrollTo(searchResult: searchResult, animated: true)
                 self.tempSearchResult = nil

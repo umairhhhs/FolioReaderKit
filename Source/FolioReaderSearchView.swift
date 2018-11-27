@@ -41,10 +41,12 @@ class FolioReaderSearchView: UIViewController {
         }
     }
     private var currentFileIndex: Int = 0
+    private var currentSectionIndex: Int = 0
     
     fileprivate var folioReader: FolioReader
     private var readerConfig: FolioReaderConfig
-    private var searchResults: [SectionSearchResult] = []
+//    private var searchResults: [SectionSearchResult] = []
+    private var searchResults: [FolioSearchDBSectionResult] = []
     
     lazy var searchingOperationQueue: OperationQueue = {
         let queue = OperationQueue()
@@ -126,24 +128,44 @@ class FolioReaderSearchView: UIViewController {
         self.currentFileIndex = maxLoop
     }
     
-    func searchInThisBook(fileIndex: Int = 0){
+    public func getChapterName(page: Int) -> String? {
+        for item in self.folioReader.readerContainer?.book.flatTableOfContents ?? [] {
+            guard
+                let reference = self.folioReader.readerContainer?.book.spine.spineReferences[safe: page],
+                let resource = item.resource,
+                (resource == reference.resource),
+                let title = item.title else {
+                continue
+            }
+            return title
+        }
+        return nil
+    }
+    
+    func searchInThisBook(sectionIndex: Int) {
         guard let searchText = searchBar.text?.trimmingCharacters(in: .whitespacesAndNewlines),
             !searchText.isEmpty
         else {
             return
         }
-        guard fileIndex < total else {
-            return
+        let sections = FolioSearcher().search(term: searchText, bookId: "4610") ?? []
+        let spineRefs = self.folioReader.readerContainer?.book.spine.spineReferences ?? []
+        for section in sections {
+            guard let index = spineRefs.firstIndex(where: { $0.resource.href == section.fileName }) else {
+                continue
+            }
+            let spineRef = spineRefs[index].resource
+            section.resource = spineRef
+            section.pageIndex = index
+            section.title = self.getChapterName(page: index) ?? ""
         }
-        isSearching = true
-        isSearchCompleted = false
+        
         let pattern = "([a-zA-Z0-9]|.){0,2}\(searchText)([a-zA-Z0-9]|.){0,2}"
         let regex = RegExp(pattern)
-        let maxFileIndex = min(total, fileIndex + 8)
+        let maxIndex = min(sections.count, sectionIndex + 8)
         DispatchQueue.global(qos: .default).async {
-            for j in fileIndex..<maxFileIndex {
-                let indexPath = IndexPath(row: j, section: 0)
-                let tocRef = self.folioReader.readerContainer?.book.flatTableOfContents[indexPath.row]
+            for j in sectionIndex..<maxIndex {
+                let section = sections[j]
                 let operation = BlockOperation.init()
                 operation.addExecutionBlock({ [weak self] in
                     guard let `self` = self else {
@@ -153,27 +175,15 @@ class FolioReaderSearchView: UIViewController {
                         return
                     }
                     var innerResults: [SearchResult] = []
-                    var sectionSearchResult = SectionSearchResult.init()
-                    sectionSearchResult.tocReference = tocRef
-                    sectionSearchResult.results = innerResults
+                    section.results = innerResults
                     
-                    func checkPauseSearchingInGlobalLoopIfNeeded() {
-                        if j == maxFileIndex - 1 {
-                            self.pauseSearchingIfNeeded(currentLoop: j, maxLoop: maxFileIndex)
-                            if self.matchesStrArray.count < self.minimumResultsOfPossible {
-                                OperationQueue.main.addOperation {
-                                    self.searchInThisBook(fileIndex: self.currentFileIndex)
-                                }
-                            }
-                        }
-                    }
                     // Load html from file
-                    let mHtml = String.loadSync(contentsOfFile: tocRef?.resource?.fullHref ?? "",
+                    let mHtml = String.loadSync(contentsOfFile: section.resource?.fullHref ?? "",
                                                 config: self.readerConfig)
                     guard let document = try? SwiftSoup.parse(mHtml),
                         let html = try? document.text(), !html.isEmpty
                     else {
-                        checkPauseSearchingInGlobalLoopIfNeeded()
+//                        checkPauseSearchingInGlobalLoopIfNeeded()
                         return
                     }
                     if operation.isCancelled == true {
@@ -181,7 +191,7 @@ class FolioReaderSearchView: UIViewController {
                     }
                     var mMatches = regex.matches(input: html)
                     guard let matches = mMatches, matches.count > 0 else {
-                        checkPauseSearchingInGlobalLoopIfNeeded()
+//                        checkPauseSearchingInGlobalLoopIfNeeded()
                         return
                     }
                     for i in 0..<matches.count {
@@ -189,19 +199,19 @@ class FolioReaderSearchView: UIViewController {
                             return
                         }
                         // Inner method
-                        func checkPauseSearchingInMatchesLoopIfNeeded() {
-                            if j == maxFileIndex - 1 && i == matches.count - 1 {
-                                self.pauseSearchingIfNeeded(currentLoop: j, maxLoop: maxFileIndex)
-                                if self.matchesStrArray.count < self.minimumResultsOfPossible {
-                                    OperationQueue.main.addOperation {
-                                        self.searchInThisBook(fileIndex: self.currentFileIndex)
-                                    }
-                                }
-                            }
-                        }
+//                        func checkPauseSearchingInMatchesLoopIfNeeded() {
+//                            if j == maxFileIndex - 1 && i == matches.count - 1 {
+//                                self.pauseSearchingIfNeeded(currentLoop: j, maxLoop: maxFileIndex)
+//                                if self.matchesStrArray.count < self.minimumResultsOfPossible {
+//                                    OperationQueue.main.addOperation {
+//                                        self.searchInThisBook(fileIndex: self.currentFileIndex)
+//                                    }
+//                                }
+//                            }
+//                        }
                         var matchStr = self.extractText(from: matches[i], fullHtml: html)
                         if matchStr.isEmpty {
-                            checkPauseSearchingInMatchesLoopIfNeeded()
+//                            checkPauseSearchingInMatchesLoopIfNeeded()
                             continue
                         }
                         matchStr = "...\(matchStr) ..."
@@ -210,15 +220,16 @@ class FolioReaderSearchView: UIViewController {
                         innerResults.append(searchResult)
                         synchronized(self, {
                             self.matchesStrArray.append(matchStr)
-                            if j == maxFileIndex - 1 && i == matches.count - 1 {
-                                checkPauseSearchingInMatchesLoopIfNeeded()
-                            }
+//                            if j == maxFileIndex - 1 && i == matches.count - 1 {
+//                                checkPauseSearchingInMatchesLoopIfNeeded()
+//                            }
                         })
+                        
                     }
-                    sectionSearchResult.results = innerResults
+                    section.results = innerResults
                     synchronized(self, {
-                        if sectionSearchResult.results.count > 0 {
-                            self.searchResults.append(sectionSearchResult)
+                        if section.results.count > 0 {
+                            self.searchResults.append(section)
                         }
                     })
                 })
@@ -234,6 +245,115 @@ class FolioReaderSearchView: UIViewController {
             }
         }
     }
+    
+//    func searchInThisBook(fileIndex: Int = 0){
+//        guard let searchText = searchBar.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+//            !searchText.isEmpty
+//        else {
+//            return
+//        }
+//        guard fileIndex < total else {
+//            return
+//        }
+//        isSearching = true
+//        isSearchCompleted = false
+//        let pattern = "([a-zA-Z0-9]|.){0,2}\(searchText)([a-zA-Z0-9]|.){0,2}"
+//        let regex = RegExp(pattern)
+//        let maxFileIndex = min(total, fileIndex + 8)
+//        DispatchQueue.global(qos: .default).async {
+//            for j in fileIndex..<maxFileIndex {
+//                let indexPath = IndexPath(row: j, section: 0)
+//                let tocRef = self.folioReader.readerContainer?.book.flatTableOfContents[indexPath.row]
+//                let operation = BlockOperation.init()
+//                operation.addExecutionBlock({ [weak self] in
+//                    guard let `self` = self else {
+//                        return
+//                    }
+//                    if operation.isCancelled == true {
+//                        return
+//                    }
+//                    var innerResults: [SearchResult] = []
+//                    var sectionSearchResult = SectionSearchResult.init()
+//                    sectionSearchResult.tocReference = tocRef
+//                    sectionSearchResult.results = innerResults
+//
+//                    func checkPauseSearchingInGlobalLoopIfNeeded() {
+//                        if j == maxFileIndex - 1 {
+//                            self.pauseSearchingIfNeeded(currentLoop: j, maxLoop: maxFileIndex)
+//                            if self.matchesStrArray.count < self.minimumResultsOfPossible {
+//                                OperationQueue.main.addOperation {
+//                                    self.searchInThisBook(fileIndex: self.currentFileIndex)
+//                                }
+//                            }
+//                        }
+//                    }
+//                    // Load html from file
+//                    let mHtml = String.loadSync(contentsOfFile: tocRef?.resource?.fullHref ?? "",
+//                                                config: self.readerConfig)
+//                    guard let document = try? SwiftSoup.parse(mHtml),
+//                        let html = try? document.text(), !html.isEmpty
+//                    else {
+//                        checkPauseSearchingInGlobalLoopIfNeeded()
+//                        return
+//                    }
+//                    if operation.isCancelled == true {
+//                        return
+//                    }
+//                    var mMatches = regex.matches(input: html)
+//                    guard let matches = mMatches, matches.count > 0 else {
+//                        checkPauseSearchingInGlobalLoopIfNeeded()
+//                        return
+//                    }
+//                    for i in 0..<matches.count {
+//                        if operation.isCancelled == true {
+//                            return
+//                        }
+//                        // Inner method
+//                        func checkPauseSearchingInMatchesLoopIfNeeded() {
+//                            if j == maxFileIndex - 1 && i == matches.count - 1 {
+//                                self.pauseSearchingIfNeeded(currentLoop: j, maxLoop: maxFileIndex)
+//                                if self.matchesStrArray.count < self.minimumResultsOfPossible {
+//                                    OperationQueue.main.addOperation {
+//                                        self.searchInThisBook(fileIndex: self.currentFileIndex)
+//                                    }
+//                                }
+//                            }
+//                        }
+//                        var matchStr = self.extractText(from: matches[i], fullHtml: html)
+//                        if matchStr.isEmpty {
+//                            checkPauseSearchingInMatchesLoopIfNeeded()
+//                            continue
+//                        }
+//                        matchStr = "...\(matchStr) ..."
+//                        let searchStringRange = (matchStr as NSString).range(of: searchText, options: .caseInsensitive)
+//                        let searchResult = SearchResult.init(fullText: matchStr, searchText: searchText, occurrenceInChapter: i + 1, highlightRange: searchStringRange)
+//                        innerResults.append(searchResult)
+//                        synchronized(self, {
+//                            self.matchesStrArray.append(matchStr)
+//                            if j == maxFileIndex - 1 && i == matches.count - 1 {
+//                                checkPauseSearchingInMatchesLoopIfNeeded()
+//                            }
+//                        })
+//                    }
+//                    sectionSearchResult.results = innerResults
+//                    synchronized(self, {
+//                        if sectionSearchResult.results.count > 0 {
+//                            self.searchResults.append(sectionSearchResult)
+//                        }
+//                    })
+//                })
+//                operation.completionBlock = {
+//                    DispatchQueue.runTaskOnMainThread {
+//                        if self.table.rowsCount == self.matchesStrArray.count {
+//                            return
+//                        }
+//                        self.table.reloadData()
+//                    }
+//                }
+//                self.searchingOperationQueue.addOperation(operation)
+//            }
+//        }
+//    }
     
     func viewForLoadingMore(withText text: String?) -> UIView {
         let container = UIView(frame: CGRect(origin: .zero, size: CGSize(width: table.bounds.width, height: 44)))
@@ -314,7 +434,7 @@ extension FolioReaderSearchView: UISearchBarDelegate {
     }
     
     public func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        searchInThisBook()
+        searchInThisBook(sectionIndex: 0)
         table.tableFooterView = viewForLoadingMore(withText: nil)
         searchBar.resignFirstResponder()
     }
@@ -342,7 +462,7 @@ extension FolioReaderSearchView: UITableViewDataSource {
         guard searchResults.count > section else {
             return nil
         }
-        label.text = searchResults[section].tocReference?.title
+        label.text = searchResults[section].title
         return headerView
     }
     
@@ -361,7 +481,8 @@ extension FolioReaderSearchView: UITableViewDataSource {
         guard searchResults.count > section else {
             return nil
         }
-        return searchResults[section].tocReference?.title
+//        return searchResults[section].tocReference?.title
+        return ""
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -381,7 +502,7 @@ extension FolioReaderSearchView: UITableViewDataSource {
         cell.textLabel?.attributedText = text
         
         if shouldLoadMore(for: indexPath) {
-            searchInThisBook(fileIndex: currentFileIndex)
+//            searchInThisBook(fileIndex: currentFileIndex)
         }
         return cell
     }
@@ -403,12 +524,12 @@ extension FolioReaderSearchView: UITableViewDelegate {
             return
         }
         let section = searchResults[indexPath.section]
-        guard let ref = section.tocReference,
+        guard section.pageIndex >= 0,
             section.results.count > indexPath.row else {
             return
         }
         let searchResult = section.results[indexPath.row]
-        self.folioReader.readerCenter?.changePageWith(reference: ref, searchResult: searchResult)
+        self.folioReader.readerCenter?.changePageWith(page: section.pageIndex, searchResult: searchResult)
         self.dismiss()
     }
 }
