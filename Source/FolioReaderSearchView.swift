@@ -116,7 +116,6 @@ class FolioReaderSearchView: UIViewController {
     }
     
     private func cancelAllSearchingOperations() {
-        pauseSearching()
         searchingOperationQueue.cancelAllOperations()
     }
     
@@ -301,7 +300,6 @@ class FolioReaderSearchView: UIViewController {
                             .replacingOccurrences(of: "\n", with: " ", options: .regularExpression)
                             .replacingOccurrences(of: "\u{e2}", with: " ")
         return finalHtml
-
     }
     
     func viewForLoadingMore(withText text: String?) -> UIView {

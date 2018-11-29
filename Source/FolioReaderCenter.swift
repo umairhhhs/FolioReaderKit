@@ -84,16 +84,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     var shouldDelayScrollingToBottomUntilWebViewDidLoad: Bool = false
     var webViewDidLoadData: [IndexPath: Bool] = [:]
     private var tempSearchResult: FolioSearchResult?
-    private lazy var searchView: UINavigationController = {
-        let navigationController = UINavigationController(rootViewController: FolioReaderSearchView(folioReader: folioReader, readerConfig: readerConfig))
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            return navigationController
-        }
-        navigationController.navigationBar.barTintColor = #colorLiteral(red: 0.137254902, green: 0.3411764706, blue: 0.5882352941, alpha: 1)
-        navigationController.navigationBar.titleTextAttributes = [NSAttributedStringKey.foregroundColor: UIColor.white , NSAttributedStringKey.font: UIFont.boldSystemFont(ofSize: 17)]
-        navigationController.navigationBar.isTranslucent = false
-        return navigationController
-    }()
+    private var searchView: UINavigationController?
     private var searchItem: UIBarButtonItem?
     open var allowSearchThisBook: Bool = false {
         didSet {
@@ -300,7 +291,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let closeIcon = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint(withConfiguration: self.readerConfig)
         let tocIcon = UIImage(readerImageNamed: "icon-navbar-toc")?.ignoreSystemTint(withConfiguration: self.readerConfig)
         let fontIcon = UIImage(readerImageNamed: "icon-navbar-font")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let imageSearch = UIImage(readerImageNamed: "icon-search")
+        let imageSearch = UIImage(readerImageNamed: "icon-navbar-search")
         let space = 70 as CGFloat
 
         let menu = UIBarButtonItem(image: closeIcon, style: .plain, target: self, action:#selector(closeReader(_:)))
@@ -1398,7 +1389,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     @objc open func closeReader(_ sender: UIBarButtonItem) {
         dismiss()
         folioReader.close()
-        (searchView.topViewController as? FolioReaderSearchView)?.willDeinitView()
+        (searchView?.topViewController as? FolioReaderSearchView)?.willDeinitView()
     }
 
     /**
@@ -1488,20 +1479,34 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         present(nav, animated: true, completion: nil)
     }
     
-    @objc func didSelectSearch(_ sender: UIBarButtonItem) {
+    private func createSearchView() -> UINavigationController {
+        let navigationController = UINavigationController(rootViewController: FolioReaderSearchView(folioReader: folioReader, readerConfig: readerConfig))
         if UIDevice.current.userInterfaceIdiom == .phone {
-            present(searchView, animated: true, completion: nil)
+            return navigationController
+        }
+        navigationController.navigationBar.barTintColor = #colorLiteral(red: 0.137254902, green: 0.3411764706, blue: 0.5882352941, alpha: 1)
+        navigationController.navigationBar.titleTextAttributes = [NSAttributedStringKey.foregroundColor: UIColor.white , NSAttributedStringKey.font: UIFont.boldSystemFont(ofSize: 17)]
+        navigationController.navigationBar.isTranslucent = false
+        return navigationController
+    }
+    
+    @objc func didSelectSearch(_ sender: UIBarButtonItem) {
+        if searchView == nil {
+            searchView = createSearchView()
+        }
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            present(searchView ?? UIViewController(), animated: true, completion: nil)
             return
         }
-        searchView.preferredContentSize = CGSize(width: 400, height: 600)
-        searchView.modalPresentationStyle = .popover
-        guard let popover = searchView.popoverPresentationController else {
+        searchView?.preferredContentSize = CGSize(width: 400, height: 600)
+        searchView?.modalPresentationStyle = .popover
+        guard let popover = searchView?.popoverPresentationController else {
             return
         }
         popover.permittedArrowDirections = .up
         popover.barButtonItem = sender
         popover.backgroundColor = #colorLiteral(red: 0.137254902, green: 0.3411764706, blue: 0.5882352941, alpha: 1)
-        present(searchView, animated: true, completion: nil)
+        present(searchView ?? UIViewController(), animated: true, completion: nil)
     }
 }
 
