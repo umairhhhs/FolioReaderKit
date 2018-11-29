@@ -38,7 +38,7 @@ class FolioReaderHighlightList: UITableViewController {
             return
         }
 
-        self.highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId)
+        self.highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId, sortBy: "date", ascending: true)
     }
 
     // MARK: - Table view data source
@@ -60,7 +60,7 @@ class FolioReaderHighlightList: UITableViewController {
         // Format date
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = self.readerConfig.localizedHighlightsDateFormat
-        let dateString = dateFormatter.string(from: highlight.date)
+        let dateString = dateFormatter.string(from: highlight.date ?? Date())
 
         // Date
         var dateLabel: UILabel!
@@ -71,7 +71,7 @@ class FolioReaderHighlightList: UITableViewController {
             dateLabel.font = UIFont(name: "Avenir-Medium", size: 12)
             cell.contentView.addSubview(dateLabel)
         } else {
-            dateLabel = cell.contentView.viewWithTag(456) as! UILabel
+            dateLabel = cell.contentView.viewWithTag(456) as? UILabel
         }
 
         dateLabel.text = dateString.uppercased()
@@ -79,8 +79,8 @@ class FolioReaderHighlightList: UITableViewController {
         dateLabel.frame = CGRect(x: 20, y: 20, width: view.frame.width-40, height: dateLabel.frame.height)
 
         // Text
-        let cleanString = highlight.content.stripHtml().truncate(250, trailing: "...").stripLineBreaks()
-        let text = NSMutableAttributedString(string: cleanString)
+        let cleanString = highlight.content?.stripHtml().truncate(250, trailing: "...").stripLineBreaks()
+        let text = NSMutableAttributedString(string: cleanString ?? "")
         let range = NSRange(location: 0, length: text.length)
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
@@ -108,7 +108,7 @@ class FolioReaderHighlightList: UITableViewController {
             highlightLabel.textColor = UIColor.black
             cell.contentView.addSubview(highlightLabel)
         } else {
-            highlightLabel = cell.contentView.viewWithTag(123) as! UILabel
+            highlightLabel = cell.contentView.viewWithTag(123) as? UILabel
         }
 
         highlightLabel.attributedText = text
@@ -127,7 +127,7 @@ class FolioReaderHighlightList: UITableViewController {
                 noteLabel.textColor = UIColor.gray
                 cell.contentView.addSubview(noteLabel)
             } else {
-                noteLabel = cell.contentView.viewWithTag(789) as! UILabel
+                noteLabel = cell.contentView.viewWithTag(789) as? UILabel
             }
             
             noteLabel.text = note
@@ -146,8 +146,8 @@ class FolioReaderHighlightList: UITableViewController {
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         let highlight = highlights[indexPath.row]
 
-        let cleanString = highlight.content.stripHtml().truncate(250, trailing: "...").stripLineBreaks()
-        let text = NSMutableAttributedString(string: cleanString)
+        let cleanString = highlight.content?.stripHtml().truncate(250, trailing: "...").stripLineBreaks()
+        let text = NSMutableAttributedString(string: cleanString ?? "")
         let range = NSRange(location: 0, length: text.length)
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
@@ -180,7 +180,7 @@ class FolioReaderHighlightList: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let highlight = highlights[safe: indexPath.row] else { return }
 
-        self.folioReader.readerCenter?.changePageWith(page: highlight.page, andFragment: highlight.highlightId)
+        self.folioReader.readerCenter?.changePageWith(page: highlight.page + 1, andFragment: highlight.highlightId ?? "")
         self.dismiss()
     }
 
@@ -190,7 +190,7 @@ class FolioReaderHighlightList: UITableViewController {
 
             if (highlight.page == self.folioReader.readerCenter?.currentPageNumber),
                 let page = self.folioReader.readerCenter?.currentPage {
-                Highlight.removeFromHTMLById(withinPage: page, highlightId: highlight.highlightId) // Remove from HTML
+                Highlight.removeFromHTMLById(withinPage: page, highlightId: highlight.highlightId ?? "") // Remove from HTML
             }
 
             highlight.remove(withConfiguration: self.readerConfig) // Remove from Database

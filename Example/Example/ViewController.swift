@@ -8,6 +8,7 @@
 
 import UIKit
 import FolioReaderKit
+import RealmSwift
 
 class ViewController: UIViewController {
 
@@ -26,7 +27,7 @@ class ViewController: UIViewController {
     }
 
     private func readerConfiguration(forEpub epub: Epub) -> FolioReaderConfig {
-        let config = FolioReaderConfig(withIdentifier: epub.readerIdentifier)
+        let config = FolioReaderConfig(withIdentifier: epub.readerIdentifier, realmConfig: Realm.Configuration.defaultConfiguration)
         config.shouldHideNavigationOnTap = epub.shouldHideNavigationOnTap
         config.scrollDirection = epub.scrollDirection
 

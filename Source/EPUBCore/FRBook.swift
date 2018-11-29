@@ -35,6 +35,17 @@ open class FRBook: NSObject {
     var authorName: String? {
         return metadata.creators.first?.name
     }
+    
+    var bookId: String? {
+        var id: String?
+        if let book = self as? FolioRWBook,
+            let folioBookId = book.id {
+            id = String(folioBookId)
+        } else {
+            id = (self.name as NSString?)?.deletingPathExtension
+        }
+        return id
+    }
 
     // MARK: - Media Overlay Metadata
     // http://www.idpf.org/epub/301/spec/epub-mediaoverlays.html#sec-package-metadata

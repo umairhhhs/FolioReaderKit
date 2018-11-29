@@ -8,7 +8,7 @@
 import UIKit
 import RealmSwift
 
-class FolioReaderAddHighlightNote: UIViewController {
+class FolioReaderAddHighlightNote: UIViewController, UIScrollViewDelegate {
 
     var textView: UITextView!
     var highlightLabel: UILabel!
@@ -75,7 +75,7 @@ class FolioReaderAddHighlightNote: UIViewController {
     
     private func prepareScrollView(){
         scrollView = UIScrollView()
-        scrollView.delegate = self as! UIScrollViewDelegate
+        scrollView.delegate = self
         scrollView.contentSize = CGSize.init(width: view.frame.width, height: view.frame.height )
         scrollView.bounces = false
         
@@ -117,7 +117,7 @@ class FolioReaderAddHighlightNote: UIViewController {
         highlightLabel.translatesAutoresizingMaskIntoConstraints = false
         highlightLabel.numberOfLines = 3
         highlightLabel.font = UIFont.systemFont(ofSize: 15)
-        highlightLabel.text = highlight.content.stripHtml().truncate(250, trailing: "...").stripLineBreaks()
+        highlightLabel.text = highlight.content?.stripHtml().truncate(250, trailing: "...").stripLineBreaks()
         
         containerView.addSubview(self.highlightLabel!)
         
@@ -166,11 +166,8 @@ class FolioReaderAddHighlightNote: UIViewController {
     @objc private func saveNote(_ sender: UIBarButtonItem) {
         if !textView.text.isEmpty {
             if isEditHighlight {
-                let realm = try! Realm(configuration: readerConfig.realmConfiguration)
-                realm.beginWrite()
-                highlight.noteForHighlight = textView.text
+                highlight.update(note: textView.text, withConfiguration: readerConfig)
                 highlightSaved = true
-                try! realm.commitWrite()
             } else {
                 highlight.noteForHighlight = textView.text
                 highlight.persist(withConfiguration: readerConfig)

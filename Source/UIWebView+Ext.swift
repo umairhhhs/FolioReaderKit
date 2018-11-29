@@ -37,4 +37,12 @@ extension UIWebView {
         let widthString = self.stringByEvaluatingJavaScript(from: "document.body.scrollWidth")
         return CGFloat((widthString as NSString? ?? "").doubleValue)
     }
+    
+    open var innerHeight: CGFloat {
+        let js = "var style = window.getComputedStyle(document.body, null); style.getPropertyValue(\"height\");"
+        let height = self.stringByEvaluatingJavaScript(from: js)
+        return CGFloat((height as NSString? ?? "").doubleValue)
+    }
+    
+    
 }

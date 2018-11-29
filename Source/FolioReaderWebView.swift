@@ -131,37 +131,57 @@ open class FolioReaderWebView: UIWebView {
     }
 
     @objc func addHighlight(_ sender: UIMenuController?) -> Highlight? {
-        let highlightAndReturn = js("highlightString('\(HighlightStyle.classForStyle(self.folioReader.currentHighlightStyle))')")
-        let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8)
-        
+        // Persist
+        guard let bookId = self.book.bookId else {
+            return nil
+        }
+        let pageNumber = folioReader.readerCenter?.currentPageNumber ?? 0
+        let migrationPageNumber = max(0, pageNumber - 1)
+
+        let highlightAndReturn = js("highlightString('\(HighlightStyle.classForStyle(self.folioReader.currentHighlightStyle))', '\(bookId)', \(migrationPageNumber) )")
+        guard let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8) else {
+            return nil
+        }
         do {
-            let json = try JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSArray
-            let dic = json.firstObject as! [String: String]
-            let rect = CGRectFromString(dic["rect"]!)
-            
+            guard let json = try JSONSerialization.jsonObject(with: jsonData, options: []) as? NSArray,
+                let dic = json.firstObject as? [String: String]
+            else {
+                return nil
+            }
             guard let rangies = dic["rangy"] else {
                 return nil
             }
-            
             guard let text = dic["content"] else {
                 return nil
             }
-            
-            createMenu(options: true)
-            setMenuVisible(true, andRect: rect)
-            
-            // Persist
-            guard
-                let identifier = dic["id"],
-                let bookId = (self.book.name as NSString?)?.deletingPathExtension else {
-                    return nil
+            guard let identifier = dic["id"] else {
+                return nil
+            }
+            if let dicRect = dic["rect"] {
+                let rect = CGRectFromString(dicRect)
+                createMenu(options: true)
+                setMenuVisible(true, andRect: rect)
             }
             // MARK: Move to method
             // get matching rang
-            let rangeString = getRangy(rangies, with: identifier)
+            var rangeString = FolioUtils.getRangy(rangies, with: identifier)
             
-            let pageNumber = folioReader.readerCenter?.currentPageNumber ?? 0
-            let match = Highlight.MatchingHighlight(text: text, id: identifier, bookId: bookId, currentPage: pageNumber, rangy:  rangeString)
+            // New id - migration to sync highlight
+            var rangy = rangeString
+            rangy = rangy.replacingOccurrences(of: Highlight.typeTextContentWithLine, with: "")
+            let elements = rangy.split(separator: "$")
+            var newId = identifier
+            if elements.count >= 2 {
+                newId = bookId + "_" + String(migrationPageNumber) + "_"
+                newId += elements[0] + "_"
+                newId += elements[1]
+            }
+            if elements.count >= 3 {
+                var newRangeString = rangeString.split(separator: "$")
+                newRangeString[2] = Substring.init(newId)
+                rangeString = newRangeString.joined(separator: "$")
+            }
+            let match = Highlight.MatchingHighlight(text: text, id: newId, bookId: bookId, currentPage: migrationPageNumber, rangy:  rangeString)
             let highlight = Highlight.matchHighlight(match)
             return highlight
             
@@ -175,18 +195,9 @@ open class FolioReaderWebView: UIWebView {
     @objc func highlight(_ sender: UIMenuController?) {
         let highlight = addHighlight(sender)
         highlight?.persist(withConfiguration: self.readerConfig)
-
     }
     
-    func getRangy(_ rangies: String, with identifier: String) -> String {
-        var rangylist = rangies.split(separator: "|")
-        rangylist.remove(at: 0)
-        var range = rangylist.filter { (aRangy) -> Bool in
-            aRangy.split(separator: "$")[2] == identifier
-            }.first
-        let rangeString = String("type:textContent|\(range!)")
-        return rangeString
-    }
+    
     
     @objc func highlightWithNote(_ sender: UIMenuController?) {
         if let highlight = addHighlight(sender) {
@@ -195,8 +206,8 @@ open class FolioReaderWebView: UIWebView {
     }
     
     @objc func updateHighlightNote (_ sender: UIMenuController?) {
-        if let highlightId = js("currentHighlightId()") {
-            let highlightNote = Highlight.getById(withConfiguration: readerConfig, highlightId: highlightId)
+        if let highlightId = js("currentHighlightId()"),
+            let highlightNote = Highlight.getById(withConfiguration: readerConfig, highlightId: highlightId) {
             self.folioReader.readerCenter?.presentAddHighlightNote(highlightNote, edit: true)
         }
     }
@@ -246,7 +257,7 @@ open class FolioReaderWebView: UIWebView {
 
         if let updateId = js("setHighlightStyle('\(HighlightStyle.classForStyle(style.rawValue))')") {
             if let rangies = js("getHighlights()") {
-                let rangeString = getRangy(rangies, with: updateId)
+                let rangeString = FolioUtils.getRangy(rangies, with: updateId)
                 Highlight.updateById(withConfiguration: self.readerConfig, highlightId: updateId, rangy: rangeString)
             }
         }

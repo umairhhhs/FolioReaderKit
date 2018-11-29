@@ -35,6 +35,9 @@ public enum FolioReaderScrollDirection: Int {
             return .horizontal
         }
     }
+    var isVertical: Bool {
+        return self == .vertical || self == .defaultVertical
+    }
 }
 
 // MARK: - ClassBasedOnClickListener
@@ -81,6 +84,7 @@ public struct ClassBasedOnClickListener {
 
 public protocol FolioReaderConfigFileDelegate {
     func load(_ config: FolioReaderConfig, url: String, completion: ((_ data: String, _ error: Error?) -> Void)?)
+    func loadSync(_ config: FolioReaderConfig, url: String) -> String
 }
 
 // MARK: - FolioReaderConfig
@@ -168,7 +172,7 @@ open class FolioReaderConfig: NSObject {
     // MARK: Realm
 
     /// Realm configuration for storing highlights
-    open var realmConfiguration         = Realm.Configuration(schemaVersion: 3)
+    open var realmConfiguration: Realm.Configuration
 
     // MARK: Localized strings
 
@@ -218,10 +222,15 @@ open class FolioReaderConfig: NSObject {
     open var fileDelegate: FolioReaderConfigFileDelegate?
     //IID END
     
-    public convenience init(withIdentifier identifier: String) {
-        self.init()
-
+    public init(withIdentifier identifier: String, realmConfig: Realm.Configuration) {
         self.identifier = identifier
+        self.realmConfiguration = realmConfig
+        super.init()
+    }
+    
+    public override init() {
+        self.identifier = nil
+        self.realmConfiguration = Realm.Configuration.defaultConfiguration
     }
 
     /**

@@ -11,6 +11,7 @@ var audioMarkClass;
 var wordsPerMinute = 180;
 var highlighter;
 
+
 window.onload = setupRangy;
 
 if (window.addEventListener) {
@@ -18,75 +19,86 @@ if (window.addEventListener) {
 }
 
 function setupRangy() {
- //Normal code goes here
+    //Normal code goes here
     rangy.init();
     highlighter = rangy.createHighlighter();
     highlighter.addClassApplier(rangy.createClassApplier("highlight-yellow", {
-                                                      ignoreWhiteSpace: true,
-                                                      tagNames: ["span", "a"],
-                                                      elementProperties: {
-                                                         href: "#",
-                                                         onclick: function() {
-                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
-                                                            callHighlightURL(this)
-                                                         return false;
+                                                         ignoreWhiteSpace: true,
+                                                         tagNames: ["span", "a"],
+                                                         elementProperties: {
+                                                             href: "#",
+                                                             onclick: function() {
+                                                             newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                             callHighlightURL(this)
+                                                             return false;
                                                          }
-                                                      }
-                                                      }));
- 
+                                                         }
+                                                         }));
+    
     highlighter.addClassApplier(rangy.createClassApplier("highlight-green", {
-                                                      ignoreWhiteSpace: true,
-                                                      tagNames: ["span", "a"],
+                                                         ignoreWhiteSpace: true,
+                                                         tagNames: ["span", "a"],
                                                          elementProperties: {
-                                                         href: "#",
-                                                         onclick: function() {
-                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
-                                                         callHighlightURL(this)
-                                                         return false;
+                                                             href: "#",
+                                                             onclick: function() {
+                                                             newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                             callHighlightURL(this)
+                                                             return false;
                                                          }
                                                          }
-                                                      }));
- 
+                                                         }));
+    
     highlighter.addClassApplier(rangy.createClassApplier("highlight-blue", {
-                                                      ignoreWhiteSpace: true,
+                                                         ignoreWhiteSpace: true,
                                                          tagNames: ["span", "a"],
                                                          elementProperties: {
-                                                         href: "#",
-                                                         onclick: function() {
-                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
-                                                         callHighlightURL(this)
-                                                         return false;
+                                                             href: "#",
+                                                             onclick: function() {
+                                                             newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                             callHighlightURL(this)
+                                                             return false;
                                                          }
                                                          }
                                                          }));
- 
+    
     highlighter.addClassApplier(rangy.createClassApplier("highlight-pink", {
-                                                      ignoreWhiteSpace: true,
+                                                         ignoreWhiteSpace: true,
                                                          tagNames: ["span", "a"],
                                                          elementProperties: {
-                                                         href: "#",
-                                                         onclick: function() {
-                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
-                                                         callHighlightURL(this)
-                                                         return false;
+                                                             href: "#",
+                                                             onclick: function() {
+                                                             newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                             callHighlightURL(this)
+                                                             return false;
                                                          }
                                                          }
                                                          }));
- 
+    
     highlighter.addClassApplier(rangy.createClassApplier("highlight-underline", {
-                                                      ignoreWhiteSpace: true,
+                                                         ignoreWhiteSpace: true,
                                                          tagNames: ["span", "a"],
                                                          elementProperties: {
-                                                         href: "#",
-                                                         onclick: function() {
-                                                         newHighlights = [ highlighter.getHighlightForElement(this) ];
-                                                         callHighlightURL(this)
-                                                         return false;
+                                                             href: "#",
+                                                             onclick: function() {
+                                                             newHighlights = [ highlighter.getHighlightForElement(this) ];
+                                                             callHighlightURL(this)
+                                                             return false;
                                                          }
                                                          }
                                                          }));
+    
+    highlighter.addClassApplier(rangy.createClassApplier("last-read", {
+                                                         ignoreWhiteSpace: true,
+                                                         tagNames: ["span", "a"],
+                                                         elementProperties: {
+                                                             href: "#",
+                                                             onclick: function() {
+                                                         }
+                                                         }
+                                                         }));
+    
+};
 
- };
 
 
 
@@ -109,6 +121,11 @@ function guid() {
 // Get All HTML
 function getHTML() {
     return document.documentElement.outerHTML;
+}
+
+// Get HTML Body
+function getHTMLBody() {
+    return document.body.outerHTML;
 }
 
 // Class manipulation
@@ -161,7 +178,7 @@ function setFontSize(cls) {
 /*
  *	Native bridge Highlight text
  */
-function highlightString(style) {
+function highlightString(style, bookId, pageIndex) {
     
     var highlightSelection = highlighter.highlightSelection(style);
     newHighlights = highlightSelection;
@@ -170,7 +187,7 @@ function highlightString(style) {
     var range = window.getSelection().getRangeAt(0);
     var startOffset = range.startOffset;
     var endOffset = range.endOffset;
-    var id = guid();
+    var id = bookId + "_" + pageIndex.toString() + "_" + aNewHighlight.characterRange.start.toString() + "_" + aNewHighlight.characterRange.end.toString()
     aNewHighlight.id = id
     var text = window.getSelection().toString();
     var params = [];
@@ -179,6 +196,22 @@ function highlightString(style) {
     return JSON.stringify(params);
 }
 
+function getHighlightSerialization(style) {
+    var serialized = highlighter.serializeSelection(style);
+    var parts = [
+                 serialized[0].start,
+                 serialized[0].end,
+                 guid(),
+                 style
+                 ];
+    var params = [];
+    params.push({ rangy: parts.join("$") });
+    clearSelection();
+    return JSON.stringify(params);
+}
+
+
+// Deprecated
 function highlightStringWithNote(style) {
     var range = window.getSelection().getRangeAt(0);
     var startOffset = range.startOffset;
@@ -205,6 +238,10 @@ function highlightStringWithNote(style) {
 
 function setHighlight( serializedHighlight ) {
     highlighter.deserialize(serializedHighlight);
+}
+
+function setLastRead( serializedLastRead ) {
+    highlighter.deserialize(serializedLastRead);
 }
 
 function getHighlights() {
@@ -332,18 +369,15 @@ function getReadingTime() {
     return readingTimeMinutes;
 }
 // IID
-var  getHighlightOffset = function(highlightId, horizontal) {
-    var elem = getHighlightElementById(highlightId)
-    if (horizontal) {
-        return document.body.clientWidth * Math.floor(elem.offsetTop / window.innerHeight);
-    }
-    return elem.offsetTop;
+var getHighlightOffset = function(highlightId, horizontal) {
+    var elem = getHighlightElementById(highlightId);
+    return getOffsetOfElement(elem, horizontal);
 }
 var getHighlightById = function (highlightId) {
     var highlight;
     for ( var i in highlighter.highlights ) {
         var aHighlight = highlighter.highlights[i];
-        if (parseInt(highlightId) === parseInt(aHighlight.id)) {
+        if (highlightId === aHighlight.id) {
             highlight = aHighlight;
         }
     }
@@ -809,4 +843,309 @@ var onClassBasedListenerClick = function(schemeName, attributeContent) {
 	var positionParameterString = "/clientX=" + event.clientX + "&clientY=" + event.clientY;
 	// Set the custom link URL to the event
 	window.location = schemeName + "://" + attributeContent + positionParameterString;
+}
+
+function createSelectionFromPoint(startX, startY, endX, endY) {
+    var doc = document;
+    var start, end, range = null;
+    if (typeof doc.caretPositionFromPoint != "undefined") {
+        start = doc.caretPositionFromPoint(startX, startY);
+        end = doc.caretPositionFromPoint(endX, endY);
+        range = doc.createRange();
+        range.setStart(start.offsetNode, start.offset);
+        range.setEnd(end.offsetNode, end.offset);
+    } else if (typeof doc.caretRangeFromPoint != "undefined") {
+        start = doc.caretRangeFromPoint(startX, startY);
+        end = doc.caretRangeFromPoint(endX, endY);
+        range = doc.createRange();
+        range.setStart(start.startContainer, start.startOffset);
+        range.setEnd(end.startContainer, end.startOffset);
+    }
+    if (range !== null && typeof window.getSelection != "undefined") {
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    } else if (typeof doc.body.createTextRange != "undefined") {
+        range = doc.body.createTextRange();
+        range.moveToPoint(startX, startY);
+        var endRange = range.duplicate();
+        endRange.moveToPoint(endX, endY);
+        range.setEndPoint("EndToEnd", endRange);
+        range.select();
+    }
+}
+
+var searchResults = [];
+var lastSearchQuery = null;
+var testCounter = 0;
+var searchResultsInvisible = true;
+
+// Testing purpose calls
+function test() {
+    
+    ++testCounter;
+    console.log("-> testCounter = " + testCounter);
+    
+    var searchQuery = "look";
+    
+    if (testCounter == 1) {
+        
+        getCompatMode();
+        wrappingSentencesWithinPTags();
+        
+        if (FolioPageFragment.getDirection() == "HORIZONTAL")
+            initHorizontalDirection();
+        
+        highlightSearchResult(searchQuery, 1, true);
+        
+    } else if (testCounter == 2) {
+        
+        makeSearchResultsInvisible();
+        
+    } else if (testCounter == 3) {
+        
+        highlightSearchResult(searchQuery, 2, true);
+        
+    } else if (testCounter == 4) {
+        
+    }
+}
+
+function highlightSearchResult(searchQuery, occurrenceInChapter, horizontal) {
+    
+    if (searchQuery == lastSearchQuery) {
+        makeSearchResultsInvisible();
+    } else {
+        resetSearchResults();
+        searchResults = applySearchResultClass(searchQuery);
+        console.debug("-> Search Query Found = " + searchResults.length);
+    }
+    
+    return applySearchResultVisibleClass(occurrenceInChapter, horizontal);
+}
+
+function applySearchResultClass(searchQuery) {
+    
+    var searchQueryRegExp = new RegExp(escapeRegExp(searchQuery), "i");
+    
+    var searchResults = [];
+    var searchChildNodesArray = [];
+    var elementArray = [];
+    var textNodeArray = [];
+    
+    var bodyElement = document.getElementsByTagName('body')[0];
+    var elementsInBody = bodyElement.getElementsByTagName('*');
+    
+    for (var i = 0 ; i < elementsInBody.length ; i++) {
+        
+        var childNodes = elementsInBody[i].childNodes;
+        
+        for (var j = 0; j < childNodes.length; j++) {
+            
+            if (childNodes[j].nodeType == Node.TEXT_NODE &&
+                childNodes[j].nodeValue.trim().length) {
+                //console.log("-> " + childNodes[j].nodeValue);
+                
+                if (childNodes[j].nodeValue.match(searchQueryRegExp)) {
+                    //console.log("-> Found -> " + childNodes[j].nodeValue);
+                    
+                    searchChildNodesArray.push(
+                                               getSearchChildNodes(childNodes[j].nodeValue, searchQuery));
+                    
+                    elementArray.push(elementsInBody[i]);
+                    textNodeArray.push(childNodes[j]);
+                }
+            }
+        }
+    }
+    
+    for (var i = 0 ; i < searchChildNodesArray.length ; i++) {
+        
+        var searchChildNodes = searchChildNodesArray[i];
+        
+        for (var j = 0 ; j < searchChildNodes.length ; j++) {
+            
+            if (searchChildNodes[j].className == "search-result")
+                searchResults.push(searchChildNodes[j]);
+            elementArray[i].insertBefore(searchChildNodes[j], textNodeArray[i]);
+        }
+        
+        elementArray[i].removeChild(textNodeArray[i]);
+    }
+    
+    lastSearchQuery = searchQuery;
+    return searchResults;
+}
+
+function getSearchChildNodes(text, searchQuery) {
+    
+    var arrayIndex = [];
+    var matchIndexStart = -1;
+    var textChunk = "";
+    var searchChildNodes = [];
+    
+    for (var i = 0, j = 0 ; i < text.length ; i++) {
+        
+        textChunk += text[i];
+        
+        if (text[i].match(new RegExp(escapeRegExp(searchQuery[j]), "i"))) {
+            
+            if (matchIndexStart == -1)
+                matchIndexStart = i;
+            
+            if (searchQuery.length == j + 1) {
+                
+                var textNode = document.createTextNode(
+                                                       textChunk.substring(0, textChunk.length - searchQuery.length));
+                
+                var searchNode = document.createElement("span");
+                searchNode.className = "search-result";
+                var queryTextNode = document.createTextNode(
+                                                            text.substring(matchIndexStart, matchIndexStart + searchQuery.length));
+                searchNode.appendChild(queryTextNode);
+                
+                searchChildNodes.push(textNode);
+                searchChildNodes.push(searchNode);
+                
+                arrayIndex.push(matchIndexStart);
+                matchIndexStart = -1;
+                j = 0;
+                textChunk = "";
+                
+            } else {
+                j++;
+            }
+            
+        } else {
+            matchIndexStart = -1;
+            j = 0;
+        }
+    }
+    
+    if (textChunk !== "") {
+        var textNode = document.createTextNode(textChunk);
+        searchChildNodes.push(textNode);
+    }
+    
+    return searchChildNodes;
+}
+
+function makeSearchResultsVisible() {
+    
+    for (var i = 0 ; i < searchResults.length ; i++) {
+        searchResults[i].className = "search-result-visible";
+    }
+    searchResultsInvisible = false;
+}
+
+function makeSearchResultsInvisible() {
+    
+    if (searchResultsInvisible)
+        return;
+    for (var i = 0 ; i < searchResults.length ; i++) {
+        if (searchResults[i].className == "search-result-visible")
+            searchResults[i].className = "search-result-invisible";
+    }
+    searchResultsInvisible = true;
+}
+
+function applySearchResultVisibleClass(occurrenceInChapter, horizontal) {
+    
+    var searchResult = searchResults[occurrenceInChapter - 1];
+    if (searchResult === undefined)
+        return;
+    searchResult.className = "search-result-visible";
+    searchResultsInvisible = false;
+    
+    return getOffsetOfElement(searchResult, horizontal);
+}
+
+
+
+function resetSearchResults() {
+    
+    for (var i = 0 ; i < searchResults.length ; i++) {
+        searchResults[i].outerHTML = searchResults[i].innerHTML;
+    }
+    
+    searchResults = [];
+    lastSearchQuery = null;
+    searchResultsInvisible = true;
+}
+
+function escapeRegExp(str) {
+    return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+}
+
+function getOffsetOfElement(elem, horizontal) {
+    if (isElementBelongToTable(elem)) {
+        var offset = offsetOfTDElement(elem)
+        if (horizontal) {
+            return document.body.clientWidth * Math.floor(offset.top / window.innerHeight);
+        }
+        return offset.top;
+    }
+    // normal element
+    if (horizontal) {
+        return document.body.clientWidth * Math.floor(elem.offsetTop / window.innerHeight);
+    }
+    return elem.offsetTop;
+}
+
+function scrollToElement(element) {
+    element.scrollIntoView();
+}
+
+function bodyOrHtml() {
+    if ('scrollingElement' in document) {
+        return document.scrollingElement;
+    }
+    // Fallback for legacy browsers
+    if (navigator.userAgent.indexOf('WebKit') != -1) {
+        return document.body;
+    }
+    return document.documentElement;
+}
+
+function scrollToSelection( sel ) {
+    var node = document.createElement("span");
+    sel.surroundContents(node);
+    var scrollDist = node.offsetTop
+    - (window.innerHeight+node.offsetHeight)/2;
+    if ( scrollDist > 0 )
+        window.scrollBy(0,scrollDist);
+}
+
+function offsetOfTDElement(elem) {
+    if(!elem) elem = this;
+    var x = elem.offsetLeft;
+    var y = elem.offsetTop;
+    while (elem = elem.offsetParent) {
+        x += elem.offsetLeft;
+        y += elem.offsetTop;
+    }
+    return { left: x, top: y };
+}
+
+function isElementBelongToTable(elem) {
+    if (elementIsTableTagName(elem)) {
+        return true
+    }
+    while (elem = elem.parentElement) {
+        if (elementIsTableTagName(elem)) {
+            return true
+        }
+    }
+    return false
+}
+
+function elementIsTableTagName(elem) {
+    if ( (elem.tagName.toLowerCase() == "td") ||
+         (elem.tagName.toLowerCase() == "tr") ||
+         (elem.tagName.toLowerCase() == "thead") ||
+         (elem.tagName.toLowerCase() == "tbody") ||
+         (elem.tagName.toLowerCase() == "tfoot") )  {
+        return true
+    }
+    return false
 }
