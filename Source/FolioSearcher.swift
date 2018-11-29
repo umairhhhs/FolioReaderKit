@@ -24,7 +24,7 @@ class FolioSearchDBSectionResult {
     var resource: FRResource?
     var pageIndex: Int = -1
     var title: String = ""
-    var results: [SearchResult] = []
+    var results: [FolioSearchResult] = []
 }
 
 extension FolioSearchDBSectionResult: Equatable {
@@ -36,7 +36,6 @@ extension FolioSearchDBSectionResult: Equatable {
 class FolioSearcher: NSObject {
 
     func search(term: String, bookId: String) -> [FolioSearchDBSectionResult]? {
-//        Array<Dictionary<String,String>> {
         guard let path = Bundle.main.path(forResource: bookId, ofType: "db") else {
             return nil
         }
@@ -45,14 +44,6 @@ class FolioSearcher: NSObject {
         }
         guard let dbresult = try? db.prepare("SELECT filename, path FROM structure WHERE docid IN (SELECT docid FROM epub WHERE epub MATCH \"\(term)\")") else {
             return nil
-        }
-        var oldResults = [Dictionary<String, String>]()
-        for row in dbresult {
-            var aResult : Dictionary<String, String> = Dictionary()
-            for (index, name) in dbresult.columnNames.enumerated() {
-                aResult[name] = row[index]! as? String
-            }
-            oldResults.append(aResult)
         }
         var results : [FolioSearchDBSectionResult] = []
         for row in dbresult {

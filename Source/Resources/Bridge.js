@@ -369,12 +369,9 @@ function getReadingTime() {
     return readingTimeMinutes;
 }
 // IID
-var  getHighlightOffset = function(highlightId, horizontal) {
-    var elem = getHighlightElementById(highlightId)
-    if (horizontal) {
-        return document.body.clientWidth * Math.floor(elem.offsetTop / window.innerHeight);
-    }
-    return elem.offsetTop;
+var getHighlightOffset = function(highlightId, horizontal) {
+    var elem = getHighlightElementById(highlightId);
+    return getOffsetOfElement(elem, horizontal);
 }
 var getHighlightById = function (highlightId) {
     var highlight;
@@ -899,7 +896,7 @@ function test() {
         if (FolioPageFragment.getDirection() == "HORIZONTAL")
             initHorizontalDirection();
         
-        highlightSearchResult(searchQuery, 1);
+        highlightSearchResult(searchQuery, 1, true);
         
     } else if (testCounter == 2) {
         
@@ -907,14 +904,14 @@ function test() {
         
     } else if (testCounter == 3) {
         
-        highlightSearchResult(searchQuery, 2);
+        highlightSearchResult(searchQuery, 2, true);
         
     } else if (testCounter == 4) {
         
     }
 }
 
-function highlightSearchResult(searchQuery, occurrenceInChapter) {
+function highlightSearchResult(searchQuery, occurrenceInChapter, horizontal) {
     
     if (searchQuery == lastSearchQuery) {
         makeSearchResultsInvisible();
@@ -924,7 +921,7 @@ function highlightSearchResult(searchQuery, occurrenceInChapter) {
         console.debug("-> Search Query Found = " + searchResults.length);
     }
     
-    return applySearchResultVisibleClass(occurrenceInChapter);
+    return applySearchResultVisibleClass(occurrenceInChapter, horizontal);
 }
 
 function applySearchResultClass(searchQuery) {
@@ -1052,7 +1049,7 @@ function makeSearchResultsInvisible() {
     searchResultsInvisible = true;
 }
 
-function applySearchResultVisibleClass(occurrenceInChapter) {
+function applySearchResultVisibleClass(occurrenceInChapter, horizontal) {
     
     var searchResult = searchResults[occurrenceInChapter - 1];
     if (searchResult === undefined)
@@ -1060,7 +1057,7 @@ function applySearchResultVisibleClass(occurrenceInChapter) {
     searchResult.className = "search-result-visible";
     searchResultsInvisible = false;
     
-    return getOffsetOfElement(searchResult, true);
+    return getOffsetOfElement(searchResult, horizontal);
 }
 
 
@@ -1081,6 +1078,14 @@ function escapeRegExp(str) {
 }
 
 function getOffsetOfElement(elem, horizontal) {
+    if (isElementBelongToTable(elem)) {
+        var offset = offsetOfTDElement(elem)
+        if (horizontal) {
+            return document.body.clientWidth * Math.floor(offset.top / window.innerHeight);
+        }
+        return offset.top;
+    }
+    // normal element
     if (horizontal) {
         return document.body.clientWidth * Math.floor(elem.offsetTop / window.innerHeight);
     }
@@ -1111,3 +1116,36 @@ function scrollToSelection( sel ) {
         window.scrollBy(0,scrollDist);
 }
 
+function offsetOfTDElement(elem) {
+    if(!elem) elem = this;
+    var x = elem.offsetLeft;
+    var y = elem.offsetTop;
+    while (elem = elem.offsetParent) {
+        x += elem.offsetLeft;
+        y += elem.offsetTop;
+    }
+    return { left: x, top: y };
+}
+
+function isElementBelongToTable(elem) {
+    if (elementIsTableTagName(elem)) {
+        return true
+    }
+    while (elem = elem.parentElement) {
+        if (elementIsTableTagName(elem)) {
+            return true
+        }
+    }
+    return false
+}
+
+function elementIsTableTagName(elem) {
+    if ( (elem.tagName.toLowerCase() == "td") ||
+         (elem.tagName.toLowerCase() == "tr") ||
+         (elem.tagName.toLowerCase() == "thead") ||
+         (elem.tagName.toLowerCase() == "tbody") ||
+         (elem.tagName.toLowerCase() == "tfoot") )  {
+        return true
+    }
+    return false
+}

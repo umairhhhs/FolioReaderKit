@@ -83,7 +83,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     // Added by DungLe
     var shouldDelayScrollingToBottomUntilWebViewDidLoad: Bool = false
     var webViewDidLoadData: [IndexPath: Bool] = [:]
-    private var tempSearchResult: SearchResult?
+    private var tempSearchResult: FolioSearchResult?
     private lazy var searchView: UINavigationController = {
         let navigationController = UINavigationController(rootViewController: FolioReaderSearchView(folioReader: folioReader, readerConfig: readerConfig))
         if UIDevice.current.userInterfaceIdiom == .phone {
@@ -799,7 +799,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     
-    open func changePageWith(page: Int, searchResult: SearchResult, animated: Bool = false) {
+    open func changePageWith(page: Int, searchResult: FolioSearchResult, animated: Bool = false) {
         guard page < totalPages else {
             print("Failed to load book because the requested resource is missing.")
             return
@@ -811,7 +811,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         }
         // Load page at index path and scroll to result
         let indexPath = IndexPath(row: page, section: 0)
-        changePageWith(indexPath: indexPath, animated: false, completion: { () -> Void in
+        changePageWith(indexPath: indexPath, animated: animated, completion: { () -> Void in
             self.updateCurrentPage()
         })
         tempSearchResult = searchResult
@@ -1571,11 +1571,8 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         
         // Go to search result if needed
         if let searchResult = tempSearchResult, let currentPage = currentPage {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                // your code here
-               currentPage.scrollTo(searchResult: searchResult, animated: true)
-                self.tempSearchResult = nil
-            }
+            currentPage.scrollTo(searchResult: searchResult, animated: true)
+            self.tempSearchResult = nil
         }
         
         // Go to anchor if needed

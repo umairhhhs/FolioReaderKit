@@ -535,11 +535,15 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         return CGFloat(0)
     }
     
-    func scrollTo(searchResult: SearchResult, animated: Bool) {
+    func scrollTo(searchResult: FolioSearchResult, animated: Bool, verticalInset: Bool = true) {
         let horizontal = self.readerConfig.scrollDirection == .horizontal
         var offset: CGFloat = 0
-        if let strOffset = webView?.js("highlightSearchResult('\(searchResult.searchText)', \(searchResult.occurrenceInChapter))") {
+        if let strOffset = webView?.js("highlightSearchResult('\(searchResult.searchText)', \(searchResult.occurrenceInChapter), \(horizontal))") {
             offset = CGFloat((strOffset as NSString).floatValue)
+            if verticalInset &&
+                self.readerConfig.scrollDirection.collectionViewScrollDirection() == UICollectionViewScrollDirection.vertical {
+                offset = offset - 100
+            }
         }
         scrollPageToOffset(offset, animated: true)
     }

@@ -18,7 +18,7 @@ class RegExp {
     }
     
     func matches(input: String) -> [NSTextCheckingResult]? {
-        let matches = self.internalRegexp.matches( in: input, options: [], range:NSMakeRange(0, input.characters.count))
+        let matches = self.internalRegexp.matches( in: input, options: [], range:NSMakeRange(0, input.count))
         if matches.count > 0 {
             return matches
         }
