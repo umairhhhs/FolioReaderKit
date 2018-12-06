@@ -14,6 +14,7 @@ public struct FolioSearchResult {
     let searchText: String
     let occurrenceInChapter: Int
     let wordRange: NSRange
+    let rangy: String
 }
 
 private struct ExtractedSearchResult {
@@ -253,7 +254,8 @@ class FolioReaderSearchView: UIViewController {
                             checkPauseSearchingInMatchesLoopIfNeeded()
                             continue
                         }
-                        let searchResult = FolioSearchResult.init(fullText: extractedResult.displayedText, searchText: searchText, occurrenceInChapter: i + 1, wordRange: extractedResult.wordRange)
+                        let rangy = (section.dbResults.count > i) ? section.dbResults[i].path : ""
+                        let searchResult = FolioSearchResult.init(fullText: extractedResult.displayedText, searchText: searchText, occurrenceInChapter: i + 1, wordRange: extractedResult.wordRange, rangy: rangy)
                         innerResults.append(searchResult)
                         synchronized(self, {
                             self.matchesStrArray.append(extractedResult.displayedText)
