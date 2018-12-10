@@ -106,8 +106,13 @@ open class FolioReaderConfig: NSObject {
     // MARK: Colors
 
     /// Base header custom TintColor
-    open var tintColor = UIColor(rgba: "#6ACC50")
+    open var defaultTintColor = UIColor(rgba: "#6ACC50")
+    open var nightModeTintColor = UIColor(rgba: "#007AFF")
 
+    func tintColor(isNightMode: Bool) -> UIColor {
+        return isNightMode ? nightModeTintColor : defaultTintColor
+    }
+    
     /// Menu background color
     open var menuBackgroundColor = UIColor.white
 
@@ -127,7 +132,7 @@ open class FolioReaderConfig: NSObject {
     open var nightModeSeparatorColor = UIColor(white: 0.5, alpha: 0.2)
 
     /// Media overlay or TTS selection color
-    open lazy var mediaOverlayColor: UIColor! = self.tintColor
+    open lazy var mediaOverlayColor: UIColor! = self.defaultTintColor
 
     // MARK: Custom actions
 

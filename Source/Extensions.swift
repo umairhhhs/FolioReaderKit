@@ -344,7 +344,7 @@ internal extension UIImage {
     /// - Parameter readerConfig: Current folio reader configuration.
     /// - Returns: Returns a colored image
     func ignoreSystemTint(withConfiguration readerConfig: FolioReaderConfig) -> UIImage? {
-        return self.imageTintColor(readerConfig.tintColor)?.withRenderingMode(.alwaysOriginal)
+        return self.imageTintColor(readerConfig.defaultTintColor)?.withRenderingMode(.alwaysOriginal)
     }
 
     /**

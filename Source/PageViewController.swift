@@ -74,7 +74,7 @@ class PageViewController: UIPageViewController {
 
     func configureNavBar() {
         let navBackground = self.folioReader.isNight(self.readerConfig.nightModeMenuBackground, UIColor.white)
-        let tintColor = self.readerConfig.tintColor
+        let tintColor = self.readerConfig.tintColor(isNightMode: folioReader.nightMode)
         let navText = self.folioReader.isNight(UIColor.white, UIColor.black)
         let font = UIFont(name: "Avenir-Light", size: 17)!
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)

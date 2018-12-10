@@ -131,7 +131,7 @@ class FolioReaderAddHighlightNote: UIViewController, UIScrollViewDelegate {
     
     private func configureNavBar() {
         let navBackground = folioReader.isNight(readerConfig.nightModeMenuBackground, UIColor.white)
-        let tintColor = readerConfig.tintColor
+        let tintColor = readerConfig.tintColor(isNightMode: folioReader.nightMode)
         let navText = folioReader.isNight(UIColor.white, UIColor.black)
         let font = UIFont(name: "Avenir-Light", size: 17)!
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)

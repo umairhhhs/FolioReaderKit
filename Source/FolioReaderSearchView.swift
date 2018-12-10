@@ -105,6 +105,9 @@ class FolioReaderSearchView: UIViewController {
         table.estimatedRowHeight = 74
         table.delegate = self
         table.dataSource = self;
+        table.backgroundColor = self.folioReader.isNight(self.readerConfig.nightModeMenuBackground, self.readerConfig.menuBackgroundColor)
+        table.separatorColor = self.folioReader.isNight(self.readerConfig.nightModeSeparatorColor, self.readerConfig.menuSeparatorColor)
+
     }
     
     @objc func dismissView() {
@@ -116,7 +119,6 @@ class FolioReaderSearchView: UIViewController {
     }
     
     private func cancelAllSearchingOperations() {
-        pauseSearching()
         searchingOperationQueue.cancelAllOperations()
     }
     
@@ -301,7 +303,6 @@ class FolioReaderSearchView: UIViewController {
                             .replacingOccurrences(of: "\n", with: " ", options: .regularExpression)
                             .replacingOccurrences(of: "\u{e2}", with: " ")
         return finalHtml
-
     }
     
     func viewForLoadingMore(withText text: String?) -> UIView {

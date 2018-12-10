@@ -193,7 +193,7 @@ class FolioReaderQuoteShare: UIViewController {
 
     func configureNavBar() {
         let navBackground = self.folioReader.isNight(self.readerConfig.nightModeMenuBackground, UIColor.white)
-        let tintColor = self.readerConfig.tintColor
+        let tintColor = self.readerConfig.tintColor(isNightMode: folioReader.nightMode)
         let navText = self.folioReader.isNight(UIColor.white, UIColor.black)
         let font = UIFont(name: "Avenir-Light", size: 17)!
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
@@ -352,7 +352,7 @@ extension FolioReaderQuoteShare: UICollectionViewDataSource {
         }
 
         if (selectedIndex == (indexPath as NSIndexPath).row) {
-            cell.contentView.layer.borderColor = self.readerConfig.tintColor.cgColor
+            cell.contentView.layer.borderColor = self.readerConfig.tintColor(isNightMode: folioReader.nightMode).cgColor
             cell.contentView.layer.borderWidth = 3
         } else {
             cell.contentView.layer.borderColor = UIColor(white: 0.5, alpha: 0.2).cgColor

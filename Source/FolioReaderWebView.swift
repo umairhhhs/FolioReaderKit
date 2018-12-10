@@ -221,7 +221,7 @@ open class FolioReaderWebView: UIWebView {
         self.clearTextSelection()
 
         let vc = UIReferenceLibraryViewController(term: selectedText)
-        vc.view.tintColor = self.readerConfig.tintColor
+        vc.view.tintColor = self.readerConfig.tintColor(isNightMode: folioReader.nightMode)
         guard let readerContainer = readerContainer else { return }
         readerContainer.show(vc, sender: nil)
     }

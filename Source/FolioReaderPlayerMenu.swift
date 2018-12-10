@@ -55,7 +55,7 @@ class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureR
         view.addSubview(menuView)
 
         let normalColor = UIColor(white: 0.5, alpha: 0.7)
-        let selectedColor = self.readerConfig.tintColor
+        let selectedColor = self.readerConfig.tintColor(isNightMode: folioReader.nightMode)
         let size = 55
         let padX = 32
         // @NOTE: could this be improved/simplified with autolayout?
@@ -261,7 +261,7 @@ class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureR
             btn.isSelected = btn == sender
 
             if btn.tag == MediaOverlayStyle.default.rawValue {
-                btn.subviews.first?.backgroundColor = (btn.isSelected ? self.readerConfig.tintColor : UIColor(white: 0.5, alpha: 0.7))
+                btn.subviews.first?.backgroundColor = (btn.isSelected ? self.readerConfig.tintColor(isNightMode: folioReader.nightMode) : UIColor(white: 0.5, alpha: 0.7))
             }
         }
 

@@ -41,11 +41,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     weak var readerContainer: FolioReaderContainer?
 
     /// The index of the current page. Note: The index start at 1!
-    open var pageNumber: Int! {
-        didSet {
-            print("pageNumber \(String(describing: pageNumber))")
-        }
-    }
+    open var pageNumber: Int!
     open var webView: FolioReaderWebView?
     open var resource: FRResource?
 
@@ -252,7 +248,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         guard let bookId = (self.book.name as NSString?)?.deletingPathExtension else {
             return
         }
-        let highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId, andPage: NSNumber(value: pageNumber - 1))
+        let page = pageNumber - 1
+        let highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId, andPage: NSNumber(value: page))
         let rangies = highlights.reduce("type:textContent") { (string, highlight) -> String in
             if let aRangy = highlight.rangy {
                 let range = aRangy.split(separator: "|").last
@@ -263,22 +260,20 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                 let fullstring = "\(highlight.contentPre!)\(highlight.content!)\(highlight.contentPost!)"
                 if  let response = self.webView?.js("migrateStringToRange('\(fullstring.stripHtml())', '\(highlight.content!.stripHtml())')")  {
                     let jsonData = response.data(using: String.Encoding.utf8)
-                    
-                    let bookmark = try! JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSDictionary
-                    if let start = bookmark["start"],
-                        let end = bookmark["end"],
-                        let uuid = self.webView?.js("guid()") {
+                    if let bookmark = try? JSONSerialization.jsonObject(with: jsonData!, options: []) as? NSDictionary,
+                        let start = bookmark?["start"],
+                        let end = bookmark?["end"] {
                         // create highlight
-                        let rangyPart = String("|\(start)$\(end)$\(uuid)$\(HighlightStyle.classForStyle(highlight.type))$")
+                        let newHighlightId = [bookId, "\(page)", "\(start)", "\(end)"].joined(separator: "_")
+                        let rangyPart = String("|\(start)$\(end)$\(newHighlightId)$\(HighlightStyle.classForStyle(highlight.type))$")
                         let rangyFull = String("type:textContent\(rangyPart)")
-                        
                         //create new highlight
-                        let migrationPageNumber = max(0, highlight.page - 1)
-                        let match = Highlight.MatchingHighlight(text: highlight.content!.stripHtml(), id: uuid, bookId: bookId, currentPage: migrationPageNumber , rangy:  rangyFull)
+                        let migrationPageNumber = max(0, page)
+                        let match = Highlight.MatchingHighlight(text: highlight.content?.stripHtml() ?? "", id: newHighlightId, bookId: bookId, currentPage: migrationPageNumber , rangy:  rangyFull)
                         let newHighlight = Highlight.matchHighlight(match)
                         newHighlight?.persist(withConfiguration: self.readerConfig)
                         //delete old highlight
-                        highlight.remove(withConfiguration: self.readerConfig)
+                        highlight.forceRemove(withConfiguration: self.readerConfig)
                         return string + rangyPart
                     }
                 }
@@ -380,12 +375,12 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
 
             if #available(iOS 9.0, *) {
                 let safariVC = SFSafariViewController(url: request.url!)
-                safariVC.view.tintColor = self.readerConfig.tintColor
+                safariVC.view.tintColor = self.readerConfig.tintColor(isNightMode: folioReader.nightMode)
                 self.folioReader.readerCenter?.present(safariVC, animated: true, completion: nil)
             } else {
                 let webViewController = WebViewController(url: request.url!)
                 let nav = UINavigationController(rootViewController: webViewController)
-                nav.view.tintColor = self.readerConfig.tintColor
+                nav.view.tintColor = self.readerConfig.tintColor(isNightMode: folioReader.nightMode)
                 self.folioReader.readerCenter?.present(nav, animated: true, completion: nil)
             }
             return false
