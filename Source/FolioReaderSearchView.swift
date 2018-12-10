@@ -24,6 +24,18 @@ private struct ExtractedSearchResult {
 
 class FolioReaderSearchView: UIViewController {
   
+    // Constants
+    let defaultTextColor = UIColor.darkGray
+    let darkModeTextColor = UIColor(white: 1, alpha: 0.5)
+    let defaultNavigationBarBackgroundColor = UIColor.white
+    let darkModeNavigationBarBackgroundColor = UIColor(rgba: "#333333")
+    let defaultSearchBarBackgroundColor = UIColor.init(rgba: "#F0F0F0")
+    let darkModeSearchBarBackgroundColor = UIColor.init(rgba: "#262627")
+    let defaultHeaderBackgroundColor = UIColor.init(rgba: "#F0F0F0")
+    let darkModeHeaderBackgroundColor = UIColor.init(rgba: "#474747")
+    let defaultHeaderTextColor = UIColor.init(white: 0, alpha: 0.7)
+    let darkModeHeaderTextColor = UIColor.init(rgba: "#B0B0B0")
+    
     private let minimumResultsOfPossible = 20
     private let loadMoreTriggerThreshold = 10
     private var searchBar: UISearchBar!
@@ -85,10 +97,30 @@ class FolioReaderSearchView: UIViewController {
         }
     }
     
+    override var preferredStatusBarStyle : UIStatusBarStyle {
+        return self.folioReader.isNight(.lightContent, .default)
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if (searchBar.text?.count ?? 0) == 0 {
             searchBar.becomeFirstResponder()
+        }
+        configureNavBar()
+        table.backgroundColor = self.folioReader.isNight(self.readerConfig.nightModeMenuBackground, self.readerConfig.menuBackgroundColor)
+        table.separatorColor = self.folioReader.isNight(self.readerConfig.nightModeSeparatorColor, self.readerConfig.menuSeparatorColor)
+        table.reloadData()
+    }
+    
+    func configureNavBar() {
+        let navBackground = self.folioReader.isNight(darkModeNavigationBarBackgroundColor, defaultNavigationBarBackgroundColor)
+        let tintColor = self.readerConfig.tintColor
+        let navText = self.folioReader.isNight(UIColor.white, UIColor.black)
+        let font = UIFont(name: "Avenir-Light", size: 17)!
+        setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
+        if let txfSearchField = searchBar.value(forKey: "_searchField") as? UITextField {
+            txfSearchField.backgroundColor = self.folioReader.isNight(darkModeSearchBarBackgroundColor, defaultSearchBarBackgroundColor)
+            txfSearchField.textColor = self.folioReader.isNight(darkModeTextColor, defaultTextColor)
         }
     }
     
@@ -105,7 +137,7 @@ class FolioReaderSearchView: UIViewController {
         table.rowHeight = 74
         table.estimatedRowHeight = 74
         table.delegate = self
-        table.dataSource = self;
+        table.dataSource = self
     }
     
     @objc func dismissView() {
@@ -117,7 +149,6 @@ class FolioReaderSearchView: UIViewController {
     }
     
     private func cancelAllSearchingOperations() {
-        pauseSearching()
         searchingOperationQueue.cancelAllOperations()
     }
     
@@ -303,7 +334,6 @@ class FolioReaderSearchView: UIViewController {
                             .replacingOccurrences(of: "\n", with: " ", options: .regularExpression)
                             .replacingOccurrences(of: "\u{e2}", with: " ")
         return finalHtml
-
     }
     
     func viewForLoadingMore(withText text: String?) -> UIView {
@@ -418,10 +448,11 @@ extension FolioReaderSearchView: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         let headerView = UIView.init(frame: CGRect.init(x: 0, y: 0, width: tableView.frame.width, height: 34))
-        headerView.backgroundColor = UIColor(red: 247/255, green: 247/255, blue: 247/255, alpha: 1)
+        headerView.backgroundColor = folioReader.isNight(darkModeHeaderBackgroundColor, defaultHeaderBackgroundColor)
         let label = UILabel()
         label.frame = CGRect.init(x: 15, y: 0, width: headerView.frame.width - 30, height: headerView.frame.height)
         label.font = UIFont.boldSystemFont(ofSize: 15)
+        label.textColor = folioReader.isNight(darkModeHeaderTextColor, defaultHeaderTextColor)
         headerView.addSubview(label)
         guard searchResults.count > section else {
             return nil
@@ -443,6 +474,8 @@ extension FolioReaderSearchView: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = table.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        cell.backgroundColor = UIColor.clear
+        cell.contentView.backgroundColor = UIColor.clear
         guard searchResults.count > indexPath.section else {
             return cell
         }
@@ -454,9 +487,12 @@ extension FolioReaderSearchView: UITableViewDataSource {
         cell.textLabel?.adjustsFontSizeToFitWidth = true
         cell.textLabel?.minimumScaleFactor = 0.8
         cell.textLabel?.numberOfLines = 3
+        cell.textLabel?.textColor = self.folioReader.isNight(UIColor(white: 1, alpha: 0.5), UIColor.darkGray)
+
         let text = NSMutableAttributedString(string: result.fullText)
         if text.string.rangeIsValid(range: result.wordRange) {
             text.addAttribute(NSAttributedStringKey.backgroundColor, value: UIColor.yellow, range: result.wordRange)
+            text.addAttribute(NSAttributedStringKey.foregroundColor, value: UIColor.darkGray, range: result.wordRange)
             text.insert(NSAttributedString.init(string: "...", attributes: nil), at: 0)
             text.append(NSAttributedString.init(string: " ...", attributes: nil))
         }
