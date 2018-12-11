@@ -271,6 +271,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                         let migrationPageNumber = max(0, page)
                         let match = Highlight.MatchingHighlight(text: highlight.content?.stripHtml() ?? "", id: newHighlightId, bookId: bookId, currentPage: migrationPageNumber , rangy:  rangyFull)
                         let newHighlight = Highlight.matchHighlight(match)
+                        newHighlight?.filePath = self.resource?.href
                         newHighlight?.persist(withConfiguration: self.readerConfig)
                         //delete old highlight
                         highlight.forceRemove(withConfiguration: self.readerConfig)

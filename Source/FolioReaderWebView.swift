@@ -165,7 +165,6 @@ open class FolioReaderWebView: UIWebView {
             // MARK: Move to method
             // get matching rang
             var rangeString = FolioUtils.getRangy(rangies, with: identifier)
-            
             // New id - migration to sync highlight
             var rangy = rangeString
             rangy = rangy.replacingOccurrences(of: Highlight.typeTextContentWithLine, with: "")
@@ -183,6 +182,7 @@ open class FolioReaderWebView: UIWebView {
             }
             let match = Highlight.MatchingHighlight(text: text, id: newId, bookId: bookId, currentPage: migrationPageNumber, rangy:  rangeString)
             let highlight = Highlight.matchHighlight(match)
+            highlight?.filePath = folioReader.readerCenter?.currentPage?.resource?.href
             return highlight
             
         } catch {
