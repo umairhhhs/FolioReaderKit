@@ -337,12 +337,16 @@ h1, h2, h3, h4, h5, h6 {
 .search-result {
 }
 
-.search-result-visible {
+html .search-result-visible {
+    background-color: yellow;
+}
+
+html.nightMode .search-result-visible {
     background-color: yellow;
 }
 
 .search-result-invisible {
-    animation: search-result-invisible 1s;
+    animation: search-result-invisible 0.5s;
 }
 
 @keyframes search-result-invisible {

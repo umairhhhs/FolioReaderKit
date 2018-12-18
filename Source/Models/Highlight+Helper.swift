@@ -132,17 +132,23 @@ extension Highlight {
         }
     }
 
-//    public func addRangy(withConfiguration readerConfig: FolioReaderConfig, id: String, rangy: String) {
-//        do {
-//            let realm = try Realm(configuration: readerConfig.realmConfiguration)
-//            realm.beginWrite()
-//            self.rangy = rangy
-//            self.highlightId = id
-//            try realm.commitWrite()
-//        } catch let error as NSError {
-//            print("Error on persist highlight: \(error)")
-//        }
-//    }
+    /// Force remove a Highlight.
+    ///
+    /// - Parameter readerConfig: Current folio reader configuration.
+    public func forceRemove(withConfiguration readerConfig: FolioReaderConfig) {
+        guard let realm = try? Realm(configuration: readerConfig.realmConfiguration) else {
+            return
+        }
+        do {
+            try realm.write {
+                realm.delete(self)
+                try realm.commitWrite()
+            }
+        } catch let error as NSError {
+            print("Error on remove highlight: \(error)")
+        }
+    }
+
     
     /// Remove a Highlight. Don't really delete it. Just mark is as deleted
     ///
