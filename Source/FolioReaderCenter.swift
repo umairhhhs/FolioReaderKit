@@ -89,8 +89,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     open var allowSearchThisBook: Bool = false {
         didSet {
             DispatchQueue.runTaskOnMainThread {
-                self.searchItem?.isEnabled = self.allowSearchThisBook
-                self.searchItem?.tintColor = self.allowSearchThisBook ? self.readerConfig.tintColor : UIColor.clear
+                self.configureNavBarButtons()
             }
         }
     }
@@ -278,8 +277,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     func configureNavBar() {
         let navBackground = folioReader.isNight(self.readerConfig.nightModeMenuBackground, UIColor.white)
         let tintColor = readerConfig.tintColor
-        let navText = folioReader.isNight(UIColor.white, UIColor.black)
-        let font = UIFont(name: "Avenir-Light", size: 17)!
+        let navText = readerConfig.tintColor
+        let font = UIFont.systemFont(ofSize: 14, weight: .medium)
         setTranslucentNavigation(color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
     }
 
@@ -299,7 +298,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         searchItem = UIBarButtonItem(image: imageSearch, style: .plain, target: self, action: #selector(didSelectSearch(_:)))
         searchItem?.tintColor = readerConfig.tintColor
         
-        navigationItem.leftBarButtonItems = [menu, toc, searchItem ?? UIBarButtonItem()]
+        navigationItem.leftBarButtonItems = self.allowSearchThisBook
+            ? [menu, toc, searchItem ?? UIBarButtonItem()] : [menu, toc]
 
         var rightBarIcons = [UIBarButtonItem]()
 
@@ -318,7 +318,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         navigationItem.rightBarButtonItems = rightBarIcons
         
         if(self.readerConfig.displayTitle){
-            navigationItem.title = book.title
+            navigationItem.title = rwBook?.title ?? book.title
         }
         self.delegate?.navigationBarButtonsDidConfigure?(center: self)
     }
