@@ -7,16 +7,6 @@ def shared_pods
   pod 'FolioReaderKit', path: '../'
 end
 
-def installerConfig
-    post_install do |installer|
-        installer.pods_project.targets.each do |target|
-            target.build_configurations.each do |config|
-                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '10.0'
-            end
-        end
-    end
-end
-
 def testing_pods
   pod 'Quick', '1.2.0'
   pod 'Nimble', '7.0.2' 
@@ -24,20 +14,26 @@ end
 
 target 'Example' do
   shared_pods
-  installerConfig
 end
 
 target 'Storyboard-Example' do
 	shared_pods
-    installerConfig
 end
 
 target 'MultipleInstance-Example' do
     shared_pods
-    installerConfig
 end
 
 target 'FolioReaderTests' do
   shared_pods
   testing_pods
 end
+
+post_install do |installer|
+    installer.pods_project.targets.each do |target|
+        target.build_configurations.each do |config|
+            config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
+        end
+    end
+end
+
