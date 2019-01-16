@@ -113,6 +113,14 @@ sup {
 }
 
 
+markJS-inner {
+    background: yellow;
+}
+
+markJS-inner.current {
+    background: yellow;
+}
+
 /* iBooks like */
 a { text-decoration: none; }
 pre { white-space: pre-wrap; }

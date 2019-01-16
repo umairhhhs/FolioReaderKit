@@ -1038,6 +1038,64 @@ function makeSearchResultsVisible() {
     searchResultsInvisible = false;
 }
 
+var didMark = false;
+var sResults = [];
+var currentClass = "current";
+
+function markSearchResult(searchQuery, occurrenceInChapter, horizontal) {
+    if (didMark) {
+        var searchResult = sResults[occurrenceInChapter - 1];
+        invisibleSearchResults();
+        searchResult.classList.add(currentClass);
+        return getOffsetOfElement(searchResult, horizontal);
+    }
+    new Mark(document.body).mark(searchQuery, {
+            'separateWordSearch': false,
+            'acrossElements': true
+                                 
+            });
+    var results = document.getElementsByTagName("markJS-inner");
+    var ignoresItem = [];
+    for (var i = 0 ; i < results.length ; i++) {
+        if (ignoresItem.includes(results[i])) {
+            continue;
+        }
+        if (results[i].innerText.toLowerCase() == searchQuery.toLowerCase()) {
+            sResults.push(results[i]);
+        } else {
+            var s = results[i].innerText;
+            for (var j = i + 1 ; j < results.length ; j++) {
+                var text = results[j].innerText;
+                if ((results[j].innerText.length == 0) && (results[j].textContent.length > 0)) {
+                    text = " ";
+                }
+                s = s + text;
+                ignoresItem.push(results[j]);
+                if (s.toLowerCase() == searchQuery.toLowerCase()) {
+                    sResults.push(results[i]);
+                    break;
+                }
+            }
+        }
+    }
+    didMark = true;
+    var searchResult = sResults[occurrenceInChapter - 1];
+    return getOffsetOfElement(searchResult, horizontal);
+    
+}
+
+function invisibleSearchResults() {
+    for (var i = 0 ; i < sResults.length ; i++) {
+        sResults[i].classList.remove(currentClass);
+    }
+}
+
+function clearAllSearchResults() {
+    new Mark(document.body).unmark();
+    didMark = false;
+    sResults = [];
+}
+
 function makeSearchResultsInvisible() {
     
     if (searchResultsInvisible)

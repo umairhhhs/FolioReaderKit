@@ -45,10 +45,10 @@ class FolioUtils {
             mRangy = String(rangy.split(separator: "|").last ?? "")
         }
         var parts = mRangy.split(separator: "$")
-        guard parts.count >= 2, let rangeEnd = Int(parts[1]) else {
+        guard parts.count >= 2, let rangeStart = Int(parts[0]) else {
             return mRangy
         }
-        parts[2] = Substring(String(rangeEnd + 1))
+        parts[0] = Substring(String(rangeStart - 50))
         return Highlight.typeTextContentWithLine + parts.joined(separator: "$")
     }
 }

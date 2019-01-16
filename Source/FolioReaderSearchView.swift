@@ -22,6 +22,10 @@ private struct ExtractedSearchResult {
     let wordRange: NSRange
 }
 
+protocol FolioReaderSearchViewDelegate: class {
+    func didClearAllSearch(view: FolioReaderSearchView)
+}
+
 class FolioReaderSearchView: UIViewController {
   
     // Constants
@@ -59,7 +63,7 @@ class FolioReaderSearchView: UIViewController {
     
     fileprivate var folioReader: FolioReader
     private var readerConfig: FolioReaderConfig
-    
+    weak var delegate: FolioReaderSearchViewDelegate?
     lazy var searchingOperationQueue: OperationQueue = {
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1
@@ -419,6 +423,7 @@ extension FolioReaderSearchView: UISearchBarDelegate {
         searchResults.removeAll()
         table?.reloadData()
         table.tableFooterView = UIView()
+        delegate?.didClearAllSearch(view: self)
     }
     
     public func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
