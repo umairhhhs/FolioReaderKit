@@ -42,7 +42,7 @@ class FolioSearcher: NSObject {
         guard let db = try? Connection(path, readonly: true) else {
             return nil
         }
-        guard let dbresult = try? db.prepare("SELECT filename, path FROM structure WHERE docid IN (SELECT docid FROM epub WHERE epub MATCH \"\(term)*\")") else {
+        guard let dbresult = try? db.prepare("SELECT filename, path FROM structure WHERE docid IN (SELECT docid FROM epub WHERE epub MATCH '\"\(term)*\"')") else {
             return nil
         }
         var results : [FolioSearchDBSectionResult] = []
