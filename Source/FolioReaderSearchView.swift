@@ -218,7 +218,7 @@ class FolioReaderSearchView: UIViewController {
         // begin search
         isSearching = true
         isSearchCompleted = false
-        let pattern = "([a-zA-Z0-9]|.){0,0}\(searchText)([a-zA-Z0-9]|.){0,0}"
+        let pattern = "\(searchText)"
         let regex = RegExp(pattern)
         let maxIndex = min(sections.count, sectionIndex + 8)
         DispatchQueue.global(qos: .default).async {
