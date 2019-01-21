@@ -1042,6 +1042,10 @@ var didMark = false;
 var sResults = [];
 var currentClass = "current";
 
+function checkNoneEscapingChars(str) {
+    return str.replace(/\s/g,' ');
+}
+
 function markSearchResult(searchQuery, occurrenceInChapter, horizontal) {
     if (didMark) {
         var searchResult = sResults[occurrenceInChapter - 1];
@@ -1060,13 +1064,13 @@ function markSearchResult(searchQuery, occurrenceInChapter, horizontal) {
         if (ignoresItem.includes(results[i])) {
             continue;
         }
-        if (results[i].innerText.toLowerCase() == searchQuery.toLowerCase()) {
+        var s = results[i].textContent;
+        if (checkNoneEscapingChars(s.toLowerCase()) == checkNoneEscapingChars(searchQuery.toLowerCase())) {
             sResults.push(results[i]);
         } else {
-            var s = results[i].innerText;
             for (var j = i + 1 ; j < results.length ; j++) {
-                var text = results[j].innerText;
-                if ((results[j].innerText.length == 0) && (results[j].textContent.length > 0)) {
+                var text = results[j].textContent;
+                if ((results[j].textContent.length == 0) && (results[j].textContent.length > 0)) {
                     text = " ";
                 }
                 s = s + text;

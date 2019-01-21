@@ -219,7 +219,9 @@ class FolioReaderSearchView: UIViewController {
         isSearching = true
         isSearchCompleted = false
         let pattern = "\(searchText)"
-        let regex = RegExp(pattern)
+        let escapedPattern = NSRegularExpression.escapedPattern(for: pattern)
+        let regex = RegExp(escapedPattern)
+
         let maxIndex = min(sections.count, sectionIndex + 8)
         DispatchQueue.global(qos: .default).async {
             for j in sectionIndex..<maxIndex {
@@ -337,6 +339,7 @@ class FolioReaderSearchView: UIViewController {
         let finalHtml = html.trimmingCharacters(in: .whitespaces)
                             .replacingOccurrences(of: "\n", with: " ", options: .regularExpression)
                             .replacingOccurrences(of: "\u{e2}", with: " ")
+                            .replacingOccurrences(of: "\u{00a0}", with: " ")
         return finalHtml
     }
     
