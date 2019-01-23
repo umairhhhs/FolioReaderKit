@@ -40,6 +40,7 @@ class FolioReaderSearchView: UIViewController {
     let defaultHeaderTextColor = UIColor.init(white: 0, alpha: 0.7)
     let darkModeHeaderTextColor = UIColor.init(rgba: "#B0B0B0")
     
+    var debugMode: Bool = false
     private let minimumResultsOfPossible = 20
     private let loadMoreTriggerThreshold = 10
     private var searchBar: UISearchBar!
@@ -256,10 +257,16 @@ class FolioReaderSearchView: UIViewController {
                     let attributedString = try? NSAttributedString(data: data, options: [.documentType: NSAttributedString.DocumentType.html], documentAttributes: nil)
                     guard var html = attributedString?.string, !html.isEmpty else {
                         checkPauseSearchingInGlobalLoopIfNeeded()
+                        if self.debugMode {
+                            self.searchResults.append(section)
+                        }
+                        if section.title.isEmpty {
+                            section.title = section.fileName
+                        }
                         return
                     }
                     if section.title.isEmpty {
-                        section.title = self.title(of: rawHtml) ?? ""
+                        section.title = self.title(of: rawHtml) ?? section.fileName
                     }
                     html = self.cleanHtml(html: html)
                     if operation.isCancelled == true {
@@ -268,6 +275,9 @@ class FolioReaderSearchView: UIViewController {
                     var mMatches = regex.matches(input: html)
                     guard let matches = mMatches, matches.count > 0 else {
                         checkPauseSearchingInGlobalLoopIfNeeded()
+                        if self.debugMode {
+                            self.searchResults.append(section)
+                        }
                         return
                     }
                     for i in 0..<matches.count {
@@ -520,7 +530,6 @@ extension FolioReaderSearchView: UITableViewDataSource {
         }
         return false
     }
-    
 }
 
 extension FolioReaderSearchView: UITableViewDelegate {

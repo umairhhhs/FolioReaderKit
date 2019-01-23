@@ -48,11 +48,12 @@ class FolioSearcher: NSObject {
         var results : [FolioSearchDBSectionResult] = []
         for row in dbresult {
             guard row.count >= 2,
-                let fileName = row[0] as? String, !fileName.isEmpty,
+                var fileName = row[0] as? String, !fileName.isEmpty,
                 let path = row[1] as? String, !path.isEmpty
             else {
                 continue
             }
+            fileName = fileName.replacingOccurrences(of: "OEBPS/", with: "")
             let result = FolioSearchDBResult.init(fileName: fileName, path: path)
             if let index = results.firstIndex(where: { $0.fileName == fileName }) {
                 let section = results[index]

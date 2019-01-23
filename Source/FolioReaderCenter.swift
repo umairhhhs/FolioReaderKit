@@ -1480,7 +1480,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     private func createSearchView() -> UINavigationController {
-        let navigationController = UINavigationController(rootViewController: FolioReaderSearchView(folioReader: folioReader, readerConfig: readerConfig))
+        let searchView = FolioReaderSearchView(folioReader: folioReader, readerConfig: readerConfig)
+        let navigationController = UINavigationController(rootViewController: searchView)
         if UIDevice.current.userInterfaceIdiom == .phone {
             return navigationController
         }
@@ -1494,6 +1495,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         if searchView == nil {
             searchView = createSearchView()
         }
+        (searchView?.topViewController as? FolioReaderSearchView)?.debugMode = readerConfig.enableSearchDebugMode
         (searchView?.topViewController as? FolioReaderSearchView)?.delegate = self
         if UIDevice.current.userInterfaceIdiom == .phone {
             present(searchView ?? UIViewController(), animated: true, completion: nil)

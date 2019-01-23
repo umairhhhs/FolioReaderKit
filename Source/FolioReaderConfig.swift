@@ -222,6 +222,8 @@ open class FolioReaderConfig: NSObject {
     open var fileDelegate: FolioReaderConfigFileDelegate?
     //IID END
     
+    open var enableSearchDebugMode: Bool = false
+    
     public init(withIdentifier identifier: String, realmConfig: Realm.Configuration) {
         self.identifier = identifier
         self.realmConfiguration = realmConfig
