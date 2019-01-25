@@ -186,7 +186,11 @@ class FolioReaderSearchView: UIViewController {
     
     func indexedData(for searchTerm: String) -> [FolioSearchDBSectionResult] {
         // setup data
-        var sections = FolioSearcher().search(term: searchTerm, bookId: "4610") ?? []
+        guard let searchIndexFilePath = folioReader.readerContainer?.readerConfig.searchIndexFilePath,
+            searchIndexFilePath.isEmpty == false else {
+            return []
+        }
+        var sections = FolioSearcher().search(term: searchTerm, dbPath: searchIndexFilePath) ?? []
         let spineRefs = self.folioReader.readerContainer?.book.spine.spineReferences ?? []
         for section in sections {
             guard let index = spineRefs.firstIndex(where: { $0.resource.href == section.fileName }) else {

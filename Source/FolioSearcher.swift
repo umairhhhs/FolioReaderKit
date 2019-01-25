@@ -34,15 +34,21 @@ extension FolioSearchDBSectionResult: Equatable {
 }
 
 class FolioSearcher: NSObject {
-
-    func search(term: String, bookId: String) -> [FolioSearchDBSectionResult]? {
-        guard let path = Bundle.main.path(forResource: bookId, ofType: "db") else {
+    
+    func search(term: String, dbPath: String) -> [FolioSearchDBSectionResult]? {
+        var db: Connection?
+        if dbPath.contains("4610") {
+            if let testPath = Bundle.main.path(forResource: "4610", ofType: "db") {
+                db = try? Connection(testPath, readonly: true)
+            }
+        } else {
+            db = try? Connection(dbPath, readonly: true)
+        }
+        guard let _db = db else {
             return nil
         }
-        guard let db = try? Connection(path, readonly: true) else {
-            return nil
-        }
-        guard let dbresult = try? db.prepare("SELECT filename, path FROM structure WHERE docid IN (SELECT docid FROM epub WHERE epub MATCH '\"\(term)*\"')") else {
+        
+        guard let dbresult = try? _db.prepare("SELECT filename, path FROM structure WHERE docid IN (SELECT docid FROM epub WHERE epub MATCH '\"\(term)*\"')") else {
             return nil
         }
         var results : [FolioSearchDBSectionResult] = []
@@ -50,8 +56,8 @@ class FolioSearcher: NSObject {
             guard row.count >= 2,
                 var fileName = row[0] as? String, !fileName.isEmpty,
                 let path = row[1] as? String, !path.isEmpty
-            else {
-                continue
+                else {
+                    continue
             }
             fileName = fileName.replacingOccurrences(of: "OEBPS/", with: "")
             let result = FolioSearchDBResult.init(fileName: fileName, path: path)

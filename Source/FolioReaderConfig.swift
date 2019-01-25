@@ -222,7 +222,9 @@ open class FolioReaderConfig: NSObject {
     open var fileDelegate: FolioReaderConfigFileDelegate?
     //IID END
     
+    // Search ebook
     open var enableSearchDebugMode: Bool = false
+    open var searchIndexFilePath: String = ""
     
     public init(withIdentifier identifier: String, realmConfig: Realm.Configuration) {
         self.identifier = identifier
