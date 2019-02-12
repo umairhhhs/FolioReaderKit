@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import SwiftSoup
 
 public struct FolioSearchResult {
     let fullText: String

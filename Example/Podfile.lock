@@ -8,7 +8,6 @@ PODS:
     - RealmSwift (= 3.10.0)
     - SQLite.swift (= 0.11.5)
     - SSZipArchive (= 2.1.1)
-    - SwiftSoup
     - ZFDragableModalTransition (= 0.6)
   - FontBlaster (4.0.1)
   - JSQWebViewController (6.0.0)
@@ -24,7 +23,6 @@ PODS:
     - SQLite.swift/standard (= 0.11.5)
   - SQLite.swift/standard (0.11.5)
   - SSZipArchive (2.1.1)
-  - SwiftSoup (1.7.4)
   - ZFDragableModalTransition (0.6)
 
 DEPENDENCIES:
@@ -44,7 +42,6 @@ SPEC REPOS:
     - RealmSwift
     - SQLite.swift
     - SSZipArchive
-    - SwiftSoup
     - ZFDragableModalTransition
 
 EXTERNAL SOURCES:
@@ -53,7 +50,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AEXML: 5ebafc1b75e0bcf0f1b09b8ca8fed2d5a199479b
-  FolioReaderKit: 9ac9fa3b2091e38474c62cc9cd7006997b5a0e08
+  FolioReaderKit: 3f1795f70a0ac74ce5848b658996f807206e7b88
   FontBlaster: 84229df8e3a7a6dacb190565bc543747a0c323f9
   JSQWebViewController: 51041569b75d19dbb6b7fe0b7ae053c32409a9be
   MenuItemKit: d9b539b28fdbbd7980d6f3668b9cd6daefeabd9b
@@ -63,9 +60,8 @@ SPEC CHECKSUMS:
   RealmSwift: 69121c8b86d0ae005fb779efdb10e606732e1c74
   SQLite.swift: 6e5356850bb1791459f8c16d6ee9195b28714a2e
   SSZipArchive: 14401ade5f8e82aba1ff03e9f88e9de60937ae60
-  SwiftSoup: 92f5b348c131aed8af04f4326db1579ab19fa08c
   ZFDragableModalTransition: 0d294eaaba6edfcb9839595de765f9ca06a4b524
 
-PODFILE CHECKSUM: 0ebd543c620d98139ab4fed2aeedcd8c727c1913
+PODFILE CHECKSUM: 39baf171960bffecad83d406230e8120da329c08
 
 COCOAPODS: 1.5.3
