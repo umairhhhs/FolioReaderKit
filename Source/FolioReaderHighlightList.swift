@@ -38,7 +38,7 @@ class FolioReaderHighlightList: UITableViewController {
             return
         }
 
-        self.highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId, sortBy: "date", ascending: true)
+        self.highlights = Highlight.allByBookId(withConfiguration: self.readerConfig, bookId: bookId, sortBy: "date", ascending: false)
     }
 
     // MARK: - Table view data source

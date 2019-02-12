@@ -36,19 +36,10 @@ extension FolioSearchDBSectionResult: Equatable {
 class FolioSearcher: NSObject {
     
     func search(term: String, dbPath: String) -> [FolioSearchDBSectionResult]? {
-        var db: Connection?
-        if dbPath.contains("4610") {
-            if let testPath = Bundle.main.path(forResource: "4610", ofType: "db") {
-                db = try? Connection(testPath, readonly: true)
-            }
-        } else {
-            db = try? Connection(dbPath, readonly: true)
-        }
-        guard let _db = db else {
+        guard let db = try? Connection(dbPath, readonly: true) else {
             return nil
         }
-        
-        guard let dbresult = try? _db.prepare("SELECT filename, path FROM structure WHERE docid IN (SELECT docid FROM epub WHERE epub MATCH '\"\(term)*\"')") else {
+        guard let dbresult = try? db.prepare("SELECT filename, path FROM structure WHERE docid IN (SELECT docid FROM epub WHERE epub MATCH '\"\(term)*\"')") else {
             return nil
         }
         var results : [FolioSearchDBSectionResult] = []
