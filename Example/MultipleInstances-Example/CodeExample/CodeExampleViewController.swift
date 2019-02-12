@@ -8,6 +8,7 @@
 
 import UIKit
 import FolioReaderKit
+import RealmSwift
 
 class CodeExampleViewController: UIViewController {
 
@@ -28,7 +29,7 @@ class CodeExampleViewController: UIViewController {
 
     private func readerConfiguration(forEpub epub: Epub) -> FolioReaderConfig {
 
-        let config = FolioReaderConfig(withIdentifier: epub.readerIdentifier)
+        let config = FolioReaderConfig(withIdentifier: epub.readerIdentifier, realmConfig: Realm.Configuration.defaultConfiguration)
         config.shouldHideNavigationOnTap = epub.shouldHideNavigationOnTap
         config.scrollDirection = epub.scrollDirection
 
@@ -56,9 +57,9 @@ class CodeExampleViewController: UIViewController {
         let readerConfiguration = self.readerConfiguration(forEpub: epub)
         switch epub {
         case .bookOne:
-            epubReaderOne.presentReader(parentViewController: self, withEpubPath: bookPath, andConfig: readerConfiguration, shouldRemoveEpub: false)
+            epubReaderOne.presentReader(parentViewController: self, rwBook: nil, withEpubPath: bookPath, andConfig: readerConfiguration, shouldRemoveEpub: false)
         case .bookTwo:
-            epubReaderTwo.presentReader(parentViewController: self, withEpubPath: bookPath, andConfig: readerConfiguration, shouldRemoveEpub: false)
+            epubReaderTwo.presentReader(parentViewController: self, rwBook: nil, withEpubPath: bookPath, andConfig: readerConfiguration, shouldRemoveEpub: false)
         }
     }
     
@@ -70,9 +71,9 @@ class CodeExampleViewController: UIViewController {
         }
 
         do {
-            if let image = try FolioReader.getCoverImage(bookPath) {
-                button?.setBackgroundImage(image, for: .normal)
-            }
+            let image = try FolioReader.getCoverImage(bookPath)
+            button?.setBackgroundImage(image, for: .normal)
+            
         } catch {
             print(error.localizedDescription)
         }

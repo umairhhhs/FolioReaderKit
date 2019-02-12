@@ -8,11 +8,13 @@
 
 import UIKit
 import FolioReaderKit
+import RealmSwift
 
 class BookTwoExampleFolioReaderContainer: BaseExampleFolioReaderContainer {
 
     override var exampleReaderConfig: FolioReaderConfig {
-        let config = FolioReaderConfig(withIdentifier: "STORYBOARD_READER_TWO")
+        let config = FolioReaderConfig(withIdentifier: "STORYBOARD_READER_TWO", realmConfig: Realm.Configuration.defaultConfiguration)
+
         config.scrollDirection = .vertical
         config.shouldHideNavigationOnTap = false
 

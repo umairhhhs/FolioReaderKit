@@ -964,8 +964,6 @@
 					"-framework",
 					"\"SSZipArchive\"",
 					"-framework",
-					"\"SwiftSoup\"",
-					"-framework",
 					"\"ZFDragableModalTransition\"",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = de.rheinwerk.ebook;
@@ -1009,8 +1007,6 @@
 					"\"RealmSwift\"",
 					"-framework",
 					"\"SSZipArchive\"",
-					"-framework",
-					"\"SwiftSoup\"",
 					"-framework",
 					"\"ZFDragableModalTransition\"",
 				);
