@@ -406,7 +406,8 @@ class FolioReaderSearchView: UIViewController {
             matchStr = String(matchStr[idx...])
             wordRange.location -= idx.encodedOffset
         }
-        if let idx = matchStr.lastIndex(of: " ") {
+        if let idx = matchStr.lastIndex(of: " "),
+            idx.encodedOffset >= wordRange.location + wordRange.length {
             matchStr = String(matchStr[..<idx])
         }
         return ExtractedSearchResult(displayedText: matchStr, wordRange: wordRange)
