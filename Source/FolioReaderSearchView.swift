@@ -52,7 +52,7 @@ class FolioReaderSearchView: UIViewController {
             debugLog("isSearchCompleted \(isSearchCompleted)")
             if self.isSearchCompleted == true {
                 DispatchQueue.runTaskOnMainThread {
-                    self.table.tableFooterView = self.viewForLoadingMore(withText: "Found \(self.matchesStrArray.count) results")
+                    self.table.tableFooterView = self.viewForLoadingMore(withText: footerText)
                 }
             }
         }
@@ -154,6 +154,13 @@ class FolioReaderSearchView: UIViewController {
     
     private func cancelAllSearchingOperations() {
         searchingOperationQueue.cancelAllOperations()
+    }
+    
+    private var footerText: String {
+        if self.matchesStrArray.count == 1 {
+            return "Found \(self.matchesStrArray.count) result"
+        }
+        return "Found \(self.matchesStrArray.count) results"
     }
     
     private func pauseSearchingIfNeeded(currentLoop: Int, maxLoop: Int) {
@@ -327,7 +334,7 @@ class FolioReaderSearchView: UIViewController {
                         self.searchResults.sort { $0.pageIndex < $1.pageIndex }
                         self.table.reloadData()
                         if self.isSearchCompleted == true {
-                            self.table.tableFooterView = self.viewForLoadingMore(withText: "Found \(self.matchesStrArray.count) results")
+                            self.table.tableFooterView = self.viewForLoadingMore(withText: footerText)
                         }
                     }
                 }
