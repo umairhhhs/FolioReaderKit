@@ -52,7 +52,7 @@ class FolioReaderSearchView: UIViewController {
             debugLog("isSearchCompleted \(isSearchCompleted)")
             if self.isSearchCompleted == true {
                 DispatchQueue.runTaskOnMainThread {
-                    self.table.tableFooterView = self.viewForLoadingMore(withText: footerText)
+                    self.table.tableFooterView = self.viewForLoadingMore(withText: self.footerText)
                 }
             }
         }
@@ -334,7 +334,7 @@ class FolioReaderSearchView: UIViewController {
                         self.searchResults.sort { $0.pageIndex < $1.pageIndex }
                         self.table.reloadData()
                         if self.isSearchCompleted == true {
-                            self.table.tableFooterView = self.viewForLoadingMore(withText: footerText)
+                            self.table.tableFooterView = self.viewForLoadingMore(withText: self.footerText)
                         }
                     }
                 }
