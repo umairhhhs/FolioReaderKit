@@ -34,6 +34,15 @@ public enum FolioReaderFont: Int {
         case .raleway: return "raleway"
         }
     }
+    
+    public var name: String {
+        switch self {
+        case .andada: return "andada"
+        case .lato: return "lato"
+        case .lora: return "lora"
+        case .raleway: return "raleway"
+        }
+    }
 }
 
 public enum FolioReaderFontSize: Int {

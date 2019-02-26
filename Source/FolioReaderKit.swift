@@ -91,6 +91,11 @@ public enum MediaOverlayStyle: Int {
     /// Called when reader did closed.
     @available(*, deprecated, message: "Use 'folioReaderDidClose(_ folioReader: FolioReader)' instead.")
     @objc optional func folioReaderDidClosed()
+    
+    @objc optional func folioReaderDidChangeNightMode(_ folioReader: FolioReader, nightMode: Bool)
+    @objc optional func folioReaderDidChangeFont(_ folioReader: FolioReader, font: String)
+    @objc optional func folioReaderDidChangeFontSize(_ folioReader: FolioReader, fontSize: Int)
+    @objc optional func folioReaderDidChangeScrollDirection(_ folioReader: FolioReader, isVertical: Bool)
 }
 
 /// Main Library class with some useful constants and methods
@@ -184,6 +189,9 @@ extension FolioReader {
     open var nightMode: Bool {
         get { return self.defaults.bool(forKey: kNightMode) }
         set (value) {
+            if value != self.nightMode {
+                self.delegate?.folioReaderDidChangeNightMode?(self, nightMode: value)
+            }
             self.defaults.set(value, forKey: kNightMode)
 
             if let readerCenter = self.readerCenter {
@@ -212,6 +220,9 @@ extension FolioReader {
             return font
         }
         set (font) {
+            if font != self.currentFont {
+                self.delegate?.folioReaderDidChangeFont?(self, font: font.name)
+            }
             self.defaults.set(font.rawValue, forKey: kCurrentFontFamily)
             _ = self.readerCenter?.currentPage?.webView?.js("setFontName('\(font.cssIdentifier)')")
         }
@@ -229,12 +240,14 @@ extension FolioReader {
             return size
         }
         set (value) {
+            if value != self.currentFontSize {
+                self.delegate?.folioReaderDidChangeFontSize?(self, fontSize: value.rawValue)
+            }
             self.defaults.set(value.rawValue, forKey: kCurrentFontSize)
 
             guard let currentPage = self.readerCenter?.currentPage else {
                 return
             }
-
             currentPage.webView?.js("setFontSize('\(currentFontSize.cssIdentifier)')")
         }
     }
@@ -279,9 +292,12 @@ extension FolioReader {
             return value
         }
         set (value) {
+            let direction = (FolioReaderScrollDirection(rawValue: value) ?? .defaultVertical)
+            if value != self.currentScrollDirection {
+                self.delegate?.folioReaderDidChangeScrollDirection?(self, isVertical: direction.isVertical)
+            }
             self.defaults.set(value, forKey: kCurrentScrollDirection)
 
-            let direction = (FolioReaderScrollDirection(rawValue: currentScrollDirection) ?? .defaultVertical)
             self.readerCenter?.setScrollDirection(direction)
         }
     }
