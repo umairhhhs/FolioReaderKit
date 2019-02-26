@@ -1625,7 +1625,7 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
                                         object: nil,
                                         userInfo: ["category" : "Reader-Table-of-Content",
                                                    "action" : "content select",
-                                                   "label" : "\(bookTitle) \(reference.title ?? "")"])
+                                                   "label" : "\(bookTitle)/ \(reference.title ?? "")"])
         }
         if item < totalPages {
             let indexPath = IndexPath(row: item, section: 0)
