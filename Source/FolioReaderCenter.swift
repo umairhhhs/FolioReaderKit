@@ -34,6 +34,12 @@ import ZFDragableModalTransition
     ///
     /// - Parameter page: The appeared page
     @objc optional func navigationBarButtonsDidConfigure(center: FolioReaderCenter)
+    
+    @objc optional func didSelectHighlight(highlight: Highlight, center: FolioReaderCenter)
+    
+    @objc optional func searchingDidStart(keyword: String, book: FRBook, center: FolioReaderCenter)
+    @objc optional func searchingDidReturn(keyword: String, book: FRBook, center: FolioReaderCenter)
+    @objc optional func didSelectSearchResult(keyword: String, book: FRBook, chapterName: String, center: FolioReaderCenter)
 
 }
 
@@ -1243,6 +1249,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         recentlyScrolled = true
         pointNow = scrollView.contentOffset
 
+        if (scrollView is UICollectionView) {
+            scrollView.isUserInteractionEnabled = false
+        }
+        
         if let currentPage = currentPage {
             currentPage.webView?.createMenu(options: true)
             currentPage.webView?.setMenuVisible(false)
@@ -1333,6 +1343,11 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     open func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         self.isScrolling = false
+        
+        if (scrollView is UICollectionView) {
+            scrollView.isUserInteractionEnabled = true
+        }
+        
         // If web page is scroll from page n to page n-1, and it did finish load before
         // scrollViewDidEndDecelerating, keep track it
         let direction: ScrollDirection = self.folioReader.needsRTLChange ? .positive(withConfiguration: self.readerConfig) : .negative(withConfiguration: self.readerConfig)
@@ -1400,6 +1415,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
         let chapter = FolioReaderChapterList(folioReader: folioReader, readerConfig: readerConfig, book: book, delegate: self)
         let highlight = FolioReaderHighlightList(folioReader: folioReader, readerConfig: readerConfig)
+        highlight.delegate = self
         let pageController = PageViewController(folioReader: folioReader, readerConfig: readerConfig)
 
         pageController.viewControllerOne = chapter
@@ -1705,5 +1721,25 @@ extension String {
 extension FolioReaderCenter: FolioReaderSearchViewDelegate {
     func didClearAllSearch(view: FolioReaderSearchView) {
         currentPage?.webView?.js("clearAllSearchResults();")
+    }
+    
+    func searchingDidStart(keyword: String, view: FolioReaderSearchView) {
+        delegate?.searchingDidStart?(keyword: keyword, book: book, center: self)
+    }
+    
+    func searchingDidReturn(keyword: String, view: FolioReaderSearchView) {
+        delegate?.searchingDidReturn?(keyword: keyword, book: book, center: self)
+    }
+    
+    func didSelectSearchResult(keyword: String, result: FolioSearchResult, section: FolioSearchDBSectionResult, chapterName: String, view: FolioReaderSearchView) {
+        self.changePageWith(page: section.pageIndex, searchResult: result)
+        delegate?.didSelectSearchResult?(keyword: keyword, book: book, chapterName: chapterName, center: self)
+    }
+}
+
+extension FolioReaderCenter: FolioReaderHighlightListDelegate {
+    func didSelectHighlight(highlight: Highlight) {
+        self.changePageWith(page: highlight.page + 1, andFragment: highlight.highlightId ?? "")
+        self.delegate?.didSelectHighlight?(highlight: highlight, center: self)
     }
 }

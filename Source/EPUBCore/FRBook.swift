@@ -28,7 +28,7 @@ open class FRBook: NSObject {
         return smils.smils.count > 0
     }
 
-    var title: String? {
+    open var title: String? {
         return metadata.titles.first
     }
 
@@ -36,7 +36,7 @@ open class FRBook: NSObject {
         return metadata.creators.first?.name
     }
     
-    var bookId: String? {
+    open var bookId: String? {
         var id: String?
         if let book = self as? FolioRWBook,
             let folioBookId = book.id {

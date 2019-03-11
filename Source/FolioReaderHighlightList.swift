@@ -8,11 +8,16 @@
 
 import UIKit
 
+@objc protocol FolioReaderHighlightListDelegate: class {
+    @objc optional func didSelectHighlight(highlight: Highlight)
+}
+
 class FolioReaderHighlightList: UITableViewController {
 
     fileprivate var highlights = [Highlight]()
     fileprivate var readerConfig: FolioReaderConfig
     fileprivate var folioReader: FolioReader
+    weak var delegate: FolioReaderHighlightListDelegate?
 
     init(folioReader: FolioReader, readerConfig: FolioReaderConfig) {
         self.readerConfig = readerConfig
@@ -179,8 +184,7 @@ class FolioReaderHighlightList: UITableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let highlight = highlights[safe: indexPath.row] else { return }
-
-        self.folioReader.readerCenter?.changePageWith(page: highlight.page + 1, andFragment: highlight.highlightId ?? "")
+        self.delegate?.didSelectHighlight?(highlight: highlight)
         self.dismiss()
     }
 

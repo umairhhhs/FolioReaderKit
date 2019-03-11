@@ -23,6 +23,10 @@ private struct ExtractedSearchResult {
 
 protocol FolioReaderSearchViewDelegate: class {
     func didClearAllSearch(view: FolioReaderSearchView)
+    func searchingDidStart(keyword: String, view: FolioReaderSearchView)
+    func searchingDidReturn(keyword: String, view: FolioReaderSearchView)
+    func didSelectSearchResult(keyword: String, result: FolioSearchResult, section: FolioSearchDBSectionResult,
+                               chapterName: String, view: FolioReaderSearchView)
 }
 
 class FolioReaderSearchView: UIViewController {
@@ -69,6 +73,7 @@ class FolioReaderSearchView: UIViewController {
         queue.maxConcurrentOperationCount = 1
         return queue
     }()
+    private var searchingDidReturn: Bool = false
     
     // MARK: Init
     
@@ -333,6 +338,10 @@ class FolioReaderSearchView: UIViewController {
                     DispatchQueue.runTaskOnMainThread {
                         self.searchResults.sort { $0.pageIndex < $1.pageIndex }
                         self.table.reloadData()
+                        if self.searchingDidReturn == false {
+                            self.searchingDidReturn = true
+                            self.delegate?.searchingDidReturn(keyword: searchText, view: self)
+                        }
                         if self.isSearchCompleted == true {
                             self.table.tableFooterView = self.viewForLoadingMore(withText: self.footerText)
                         }
@@ -459,6 +468,8 @@ extension FolioReaderSearchView: UISearchBarDelegate {
         }
         table.tableFooterView = viewForLoadingMore(withText: nil)
         clearAllSearchs()
+        self.delegate?.searchingDidStart(keyword: searchText, view: self)
+        self.searchingDidReturn = false
         searchInThisBook(sectionIndex: 0)
     }
     
@@ -555,7 +566,11 @@ extension FolioReaderSearchView: UITableViewDelegate {
             return
         }
         let searchResult = section.results[indexPath.row]
-        self.folioReader.readerCenter?.changePageWith(page: section.pageIndex, searchResult: searchResult)
+        var chapterName = ""
+        if searchResults.count > indexPath.section {
+            chapterName = searchResults[indexPath.section].title
+        }
+        self.delegate?.didSelectSearchResult(keyword: currentSearchText ?? "", result: searchResult, section: section, chapterName: chapterName, view: self)
         self.dismiss()
     }
 }
