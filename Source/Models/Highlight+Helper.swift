@@ -123,6 +123,7 @@ extension Highlight {
         do {
             let realm = try Realm(configuration: readerConfig.realmConfiguration)
             realm.beginWrite()
+            self.date = Date()
             realm.add(self, update: true)
             try realm.commitWrite()
             completion?(nil)
@@ -161,6 +162,7 @@ extension Highlight {
             try realm.write {
                 self.isSynced = false
                 self.isDeleted = true
+                self.date = Date()
                 try realm.commitWrite()
             }
         } catch let error as NSError {
@@ -223,6 +225,7 @@ extension Highlight {
             highlight?.isSynced = false
             highlight?.rangy = rangy
             highlight?.type = styleForClass(forRangy: rangy)
+            highlight?.date = Date()
             try realm.commitWrite()
             
         } catch let error as NSError {
@@ -240,6 +243,7 @@ extension Highlight {
             try realm.write {
                 self.noteForHighlight = note
                 self.isSynced = false
+                self.date = Date()
                 try realm.commitWrite()
             }
         } catch let error as NSError {
