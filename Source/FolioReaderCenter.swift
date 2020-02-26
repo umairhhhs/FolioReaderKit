@@ -1434,8 +1434,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         hideBars()
 
         let menu = FolioReaderFontsMenu(folioReader: folioReader, readerConfig: readerConfig)
-        menu.modalPresentationStyle = .custom
-
+        menu.modalPresentationStyle = .fullScreen
         animator = ZFModalTransitionAnimator(modalViewController: menu)
         animator.isDragable = false
         animator.bounces = false
@@ -1445,7 +1444,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         animator.direction = ZFModalTransitonDirection.bottom
 
         menu.transitioningDelegate = animator
-        menu.modalPresentationStyle = .fullScreen
         self.present(menu, animated: true, completion: nil)
     }
 
@@ -1457,7 +1455,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         hideBars()
 
         let menu = FolioReaderPlayerMenu(folioReader: folioReader, readerConfig: readerConfig)
-        menu.modalPresentationStyle = .custom
+        menu.modalPresentationStyle = .fullScreen
 
         animator = ZFModalTransitionAnimator(modalViewController: menu)
         animator.isDragable = true
@@ -1479,7 +1477,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let nav = UINavigationController(rootViewController: quoteShare)
 
         if UIDevice.current.userInterfaceIdiom == .pad {
-            nav.modalPresentationStyle = .formSheet
+            nav.modalPresentationStyle = .fullScreen
         }
         present(nav, animated: true, completion: nil)
     }
@@ -1491,7 +1489,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let addHighlightView = FolioReaderAddHighlightNote(withHighlight: highlight, folioReader: folioReader, readerConfig: readerConfig)
         addHighlightView.isEditHighlight = edit
         let nav = UINavigationController(rootViewController: addHighlightView)
-        nav.modalPresentationStyle = .formSheet
+        nav.modalPresentationStyle = .fullScreen
         
         present(nav, animated: true, completion: nil)
     }
@@ -1519,7 +1517,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             return
         }
         searchView?.preferredContentSize = CGSize(width: 400, height: 600)
-        searchView?.modalPresentationStyle = .popover
+        searchView?.modalPresentationStyle = .fullScreen
         guard let popover = searchView?.popoverPresentationController else {
             return
         }
