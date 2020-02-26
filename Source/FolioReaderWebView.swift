@@ -113,7 +113,7 @@ open class FolioReaderWebView: UIWebView {
             alert.sourceView = self.folioReader.readerCenter?.currentPage
             alert.sourceRect = sender.menuFrame
         }
-
+        alertController.modalPresentationStyle = .fullScreen
         self.folioReader.readerCenter?.present(alertController, animated: true, completion: nil)
     }
 

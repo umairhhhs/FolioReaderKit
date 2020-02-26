@@ -382,12 +382,14 @@ extension FolioReaderQuoteShare: UICollectionViewDelegate {
             let takePhoto = UIAlertAction(title: self.readerConfig.localizedTakePhoto, style: .default, handler: { (action) -> Void in
                 self.imagePicker.sourceType = .camera
                 self.imagePicker.allowsEditing = true
+                self.imagePicker.modalPresentationStyle = .fullScreen
                 self.present(self.imagePicker, animated: true, completion: nil)
             })
 
             let existingPhoto = UIAlertAction(title: self.readerConfig.localizedChooseExisting, style: .default) { (action) -> Void in
                 self.imagePicker.sourceType = .photoLibrary
                 self.imagePicker.allowsEditing = true
+                self.imagePicker.modalPresentationStyle = .fullScreen
                 self.present(self.imagePicker, animated: true, completion: nil)
             }
 
