@@ -377,11 +377,13 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             if #available(iOS 9.0, *) {
                 let safariVC = SFSafariViewController(url: request.url!)
                 safariVC.view.tintColor = self.readerConfig.tintColor
+                safariVC.modalPresentationStyle = .fullScreen
                 self.folioReader.readerCenter?.present(safariVC, animated: true, completion: nil)
             } else {
                 let webViewController = WebViewController(url: request.url!)
                 let nav = UINavigationController(rootViewController: webViewController)
                 nav.view.tintColor = self.readerConfig.tintColor
+                nav.modalPresentationStyle = .fullScreen
                 self.folioReader.readerCenter?.present(nav, animated: true, completion: nil)
             }
             return false
