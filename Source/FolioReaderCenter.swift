@@ -1423,6 +1423,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         pageController.segmentedControlItems = [readerConfig.localizedContentsTitle, readerConfig.localizedHighlightsTitle]
 
         let nav = UINavigationController(rootViewController: pageController)
+        nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true, completion: nil)
     }
 
@@ -1512,8 +1513,12 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         }
         (searchView?.topViewController as? FolioReaderSearchView)?.debugMode = readerConfig.enableSearchDebugMode
         (searchView?.topViewController as? FolioReaderSearchView)?.delegate = self
+        
+        let searchViewController = searchView ?? UIViewController()
+        searchViewController.modalPresentationStyle = .fullScreen
+        
         if UIDevice.current.userInterfaceIdiom == .phone {
-            present(searchView ?? UIViewController(), animated: true, completion: nil)
+            present(searchViewController, animated: true, completion: nil)
             return
         }
         searchView?.preferredContentSize = CGSize(width: 400, height: 600)
@@ -1524,7 +1529,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         popover.permittedArrowDirections = .up
         popover.barButtonItem = sender
         popover.backgroundColor = #colorLiteral(red: 0.137254902, green: 0.3411764706, blue: 0.5882352941, alpha: 1)
-        present(searchView ?? UIViewController(), animated: true, completion: nil)
+
+        present(searchViewController, animated: true, completion: nil)
     }
 }
 
