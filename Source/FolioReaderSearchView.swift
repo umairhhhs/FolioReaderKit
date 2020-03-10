@@ -127,8 +127,15 @@ class FolioReaderSearchView: UIViewController {
         let navText = self.folioReader.isNight(UIColor.white, UIColor.black)
         let font = UIFont(name: "Avenir-Light", size: 17)!
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
-        searchBar.searchTextField.backgroundColor = self.folioReader.isNight(darkModeSearchBarBackgroundColor, defaultSearchBarBackgroundColor)
-        searchBar.searchTextField.textColor = self.folioReader.isNight(darkModeTextColor, defaultTextColor)
+        if #available(iOS 13, *) {
+            searchBar.searchTextField.backgroundColor = self.folioReader.isNight(darkModeSearchBarBackgroundColor, defaultSearchBarBackgroundColor)
+            searchBar.searchTextField.textColor = self.folioReader.isNight(darkModeTextColor, defaultTextColor)
+        } else {
+            if let txfSearchField = searchBar.value(forKey: "_searchField") as? UITextField {
+                txfSearchField.backgroundColor = self.folioReader.isNight(darkModeSearchBarBackgroundColor, defaultSearchBarBackgroundColor)
+                txfSearchField.textColor = self.folioReader.isNight(darkModeTextColor, defaultTextColor)
+            }
+        }
     }
     
     private func addTableView(){
