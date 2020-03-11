@@ -1507,18 +1507,31 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     @objc func didSelectSearch(_ sender: UIBarButtonItem) {
-        if searchView == nil {
-            searchView = createSearchView()
+            if searchView == nil {
+                searchView = createSearchView()
+            }
+            (searchView?.topViewController as? FolioReaderSearchView)?.debugMode = readerConfig.enableSearchDebugMode
+            (searchView?.topViewController as? FolioReaderSearchView)?.delegate = self
+            
+            let searchViewController = searchView ?? UIViewController()
+            searchViewController.modalPresentationStyle = .fullScreen
+            
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                present(searchViewController, animated: true, completion: nil)
+                return
+            }
+            searchView?.preferredContentSize = CGSize(width: 400, height: 600)
+            searchView?.modalPresentationStyle = .popover
+            guard let popover = searchView?.popoverPresentationController else {
+                return
+            }
+            popover.permittedArrowDirections = .up
+            popover.barButtonItem = sender
+            popover.backgroundColor = #colorLiteral(red: 0.137254902, green: 0.3411764706, blue: 0.5882352941, alpha: 1)
+
+            present(searchViewController, animated: true, completion: nil)
         }
-        (searchView?.topViewController as? FolioReaderSearchView)?.debugMode = readerConfig.enableSearchDebugMode
-        (searchView?.topViewController as? FolioReaderSearchView)?.delegate = self
-        
-        let searchViewController = searchView ?? UIViewController()
-        searchViewController.modalPresentationStyle = .fullScreen
-        
-        present(searchViewController, animated: true, completion: nil)
     }
-}
 
 // MARK: FolioPageDelegate
 
