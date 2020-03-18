@@ -94,6 +94,7 @@ class FolioReaderAddHighlightNote: UIViewController, UIScrollViewDelegate {
     
     private func configureTextView(){
         textView.delegate = self
+        textView.autocorrectionType = .no
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.textColor = .black
         textView.font = UIFont.boldSystemFont(ofSize: 15)
@@ -155,14 +156,14 @@ class FolioReaderAddHighlightNote: UIViewController, UIScrollViewDelegate {
         keyboardFrameHeight = keyboardFrame.size.height
         contentInset.bottom = keyboardFrame.size.height
         self.scrollView.contentInset = contentInset
-        heiConstraint.constant = view.frame.height - keyboardFrameHeight - 100
+        heiConstraint.constant = view.frame.height - keyboardFrameHeight - 120
     }
     
     @objc private func keyboardWillHide(notification:NSNotification){
         let contentInset:UIEdgeInsets = UIEdgeInsets.zero
         keyboardFrameHeight = 0
         self.scrollView.contentInset = contentInset
-        heiConstraint.constant = view.frame.height - 100
+        heiConstraint.constant = view.frame.height - 120
     }
     
     @objc private func saveNote(_ sender: UIBarButtonItem) {
@@ -186,6 +187,7 @@ extension FolioReaderAddHighlightNote: UITextViewDelegate {
     
     func textViewDidChange(_ textView: UITextView) {
         textView.scrollsToTop = true
+        textView.layoutIfNeeded()
     }
     
 }
