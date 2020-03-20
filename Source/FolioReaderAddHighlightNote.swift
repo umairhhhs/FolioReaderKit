@@ -104,8 +104,8 @@ class FolioReaderAddHighlightNote: UIViewController, UIScrollViewDelegate {
              textView.text = highlight.noteForHighlight
         }
         
-        let leftConstraint = NSLayoutConstraint(item: textView, attribute: .left, relatedBy: .equal, toItem: containerView, attribute: .left, multiplier: 1.0, constant: 0)
-        let rightConstraint = NSLayoutConstraint(item: textView, attribute: .right, relatedBy: .equal, toItem: containerView, attribute: .right, multiplier: 1.0, constant: 0)
+        let leftConstraint = NSLayoutConstraint(item: textView, attribute: .left, relatedBy: .equal, toItem: containerView, attribute: .left, multiplier: 1.0, constant: 20)
+        let rightConstraint = NSLayoutConstraint(item: textView, attribute: .right, relatedBy: .equal, toItem: containerView, attribute: .right, multiplier: 1.0, constant: -20)
         let topConstraint = NSLayoutConstraint(item: textView, attribute: .top, relatedBy: .equal, toItem: containerView, attribute: .top, multiplier: 1, constant: 100)
         heiConstraint = NSLayoutConstraint(item: textView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .height, multiplier: 1, constant: view.frame.height - 100)
         
@@ -120,12 +120,12 @@ class FolioReaderAddHighlightNote: UIViewController, UIScrollViewDelegate {
         
         containerView.addSubview(self.highlightLabel)
         
-        let leftConstraint = NSLayoutConstraint(item: highlightLabel, attribute: .left, relatedBy: .equal, toItem: scrollView, attribute: .left, multiplier: 1.0, constant: 20)
-        let rightConstraint = NSLayoutConstraint(item: highlightLabel, attribute: .right, relatedBy: .equal, toItem: scrollView, attribute: .right, multiplier: 1.0, constant: -20)
-        let topConstraint = NSLayoutConstraint(item: highlightLabel, attribute: .top, relatedBy: .equal, toItem: scrollView, attribute: .top, multiplier: 1, constant: 20)
+        let leftConstraint = NSLayoutConstraint(item: highlightLabel, attribute: .left, relatedBy: .equal, toItem: containerView, attribute: .left, multiplier: 1.0, constant: 20)
+        let rightConstraint = NSLayoutConstraint(item: highlightLabel, attribute: .right, relatedBy: .equal, toItem: containerView, attribute: .right, multiplier: 1.0, constant: -20)
+        let topConstraint = NSLayoutConstraint(item: highlightLabel, attribute: .top, relatedBy: .equal, toItem: containerView, attribute: .top, multiplier: 1, constant: 20)
         let heiConstraint = NSLayoutConstraint(item: highlightLabel, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .height, multiplier: 1, constant: 70)
         
-        scrollView.addConstraints([leftConstraint, rightConstraint, topConstraint, heiConstraint])
+        containerView.addConstraints([leftConstraint, rightConstraint, topConstraint, heiConstraint])
     }
     
     private func configureNavBar() {
