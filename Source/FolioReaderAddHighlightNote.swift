@@ -113,10 +113,12 @@ class FolioReaderAddHighlightNote: UIViewController, UIScrollViewDelegate {
     }
     
     private func configureLabel() {
+        let maximumTextLenght = UIDevice.current.userInterfaceIdiom == .pad ? 650 : 250
+
         highlightLabel.translatesAutoresizingMaskIntoConstraints = false
         highlightLabel.numberOfLines = 3
         highlightLabel.font = UIFont.systemFont(ofSize: 15)
-        highlightLabel.text = highlight.content?.stripHtml().truncate(250, trailing: "...").stripLineBreaks()
+        highlightLabel.text = highlight.content?.stripHtml().truncate(maximumTextLenght, trailing: "...").stripLineBreaks()
         
         containerView.addSubview(self.highlightLabel)
         
